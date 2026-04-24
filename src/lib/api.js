@@ -11,7 +11,7 @@
 // ============================================================
 
 const APPS_SCRIPT_URL = import.meta.env.VITE_APPS_SCRIPT_URL || ''
-const DEMO_MODE = import.meta.env.VITE_DEMO_MODE !== 'false'
+const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true'
 
 // ── Internal fetch helper ─────────────────────────────────────
 async function callAPI(params) {
@@ -34,7 +34,7 @@ async function postAPI(body) {
 
   const res = await fetch(APPS_SCRIPT_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: JSON.stringify(body),
     redirect: 'follow',
   })
