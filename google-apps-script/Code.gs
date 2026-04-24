@@ -13,7 +13,7 @@ function setup() {
   var sheets = ["users", "documents", "activity_logs"];
   var headers = {
     "users": ["id", "username", "password", "full_name", "unit", "role", "lastLogin"],
-    "documents": ["id", "title", "issue_number", "category", "categoryLabel", "summary", "drive_link", "content", "updatedAt", "created_at"],
+    "documents": ["id", "title", "issue_number", "category", "categoryLabel", "summary", "drive_link", "drive_link_type", "content", "updatedAt", "created_at"],
     "activity_logs": ["id", "timestamp", "username", "action", "details", "created_at"]
   };
 

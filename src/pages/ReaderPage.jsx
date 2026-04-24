@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { removeVietnameseDiacritics } from '../lib/utils';
+import { removeVietnameseDiacritics, getDirectImageUrl } from '../lib/utils';
 
 export default function ReaderPage({ doc, searchTerm, onBack }) {
   const [activeId, setActiveId] = useState('');
@@ -98,15 +98,24 @@ export default function ReaderPage({ doc, searchTerm, onBack }) {
             <h1 className="text-xl md:text-2xl font-extrabold text-[#113a26] mb-2">{doc.title}</h1>
             <div className="text-sm font-bold text-[#113a26]/70">{doc.issue_number}</div>
             
-            {/* Nút Xem PDF */}
-            {doc.drive_link && (
+            {/* Nút Xem PDF hoặc hiển thị Ảnh */}
+            {doc.drive_link && doc.drive_link_type === 'image' ? (
+              <div className="mt-6 flex justify-center">
+                <img 
+                  src={getDirectImageUrl(doc.drive_link)} 
+                  alt="Ảnh đính kèm" 
+                  className="max-w-full md:max-w-2xl h-auto rounded-lg shadow-md border border-[#113a26]/10" 
+                  loading="lazy" 
+                />
+              </div>
+            ) : doc.drive_link ? (
               <div className="mt-4">
                 <a href={doc.drive_link} target="_blank" rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 bg-[#113a26] text-white px-4 py-2 rounded-lg text-sm font-bold no-underline transition-colors hover:bg-navy">
                   📄 Xem bản gốc (PDF)
                 </a>
               </div>
-            )}
+            ) : null}
           </div>
 
           <div className="leading-relaxed">

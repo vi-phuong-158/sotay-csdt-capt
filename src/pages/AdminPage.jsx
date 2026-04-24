@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { formatDate, formatDateTime } from '../lib/utils';
+import { formatDate, formatDateTime, validateFileHeader } from '../lib/utils';
 import { uploadFile } from '../lib/api';
 import Modal from '../components/Modal';
 
@@ -33,8 +33,17 @@ export default function AdminPage() {
     
     setIsUploading(true);
     let driveUrl = newDoc.drive_link;
+    let fileType = null;
 
     if (selectedFile) {
+      const validation = await validateFileHeader(selectedFile);
+      if (!validation.isValid) {
+        alert(validation.error);
+        setIsUploading(false);
+        return;
+      }
+      fileType = validation.type;
+
       try {
         const uploadRes = await uploadFile(selectedFile);
         if (uploadRes.success && uploadRes.url) {
@@ -67,6 +76,7 @@ export default function AdminPage() {
       categoryLabel: newDoc.category === 'hinh-su' ? 'Hình sự' : 'Khác',
       summary: newDoc.summary,
       drive_link: driveUrl,
+      drive_link_type: fileType,
       content: {
         chapters: [{ id: `ch-${Date.now()}`, title: 'Chương I', articles }]
       }
@@ -277,8 +287,8 @@ export default function AdminPage() {
                   <input value={newDoc.issue_number} onChange={e => setNewDoc({...newDoc, issue_number: e.target.value})} className="w-full p-2.5 rounded bg-white/5 border border-white/20 text-white outline-none focus:border-gold" />
                 </div>
                 <div>
-                  <label className="block text-xs text-white/60 mb-1">Tải file đính kèm (PDF)</label>
-                  <input type="file" accept=".pdf" onChange={e => setSelectedFile(e.target.files[0])} className="w-full p-2 rounded bg-white/5 border border-white/20 text-white/70 outline-none focus:border-gold file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gold file:text-forest-dark hover:file:bg-gold/80" />
+                  <label className="block text-xs text-white/60 mb-1">Tải file đính kèm (PDF, Hình ảnh)</label>
+                  <input type="file" accept=".pdf,image/*" onChange={e => setSelectedFile(e.target.files[0])} className="w-full p-2 rounded bg-white/5 border border-white/20 text-white/70 outline-none focus:border-gold file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gold file:text-forest-dark hover:file:bg-gold/80" />
                 </div>
                 <div>
                   <label className="block text-xs text-white/60 mb-1">Tóm tắt</label>
