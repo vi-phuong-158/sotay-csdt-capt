@@ -128,11 +128,22 @@ export function AppProvider({ children }) {
   }, [showToast]);
 
   const addDocument = useCallback(async (doc) => {
-    const newDoc = { ...doc, id: 'doc-' + Date.now(), created_at: new Date().toISOString() };
-    setDocuments(prev => [newDoc, ...prev]);
-    showToast('Đã thêm văn bản: ' + doc.title, 'success');
-    await appendRow('documents', newDoc);
-    return newDoc;
+    try {
+      const newDoc = { ...doc, id: 'doc-' + Date.now(), created_at: new Date().toISOString() };
+      
+      const result = await appendRow('documents', newDoc);
+      if (result.success) {
+        setDocuments(prev => [newDoc, ...prev]);
+        showToast('Đã thêm văn bản: ' + doc.title, 'success');
+        return newDoc;
+      } else {
+        throw new Error(result.error || 'Lỗi không xác định từ API');
+      }
+    } catch (error) {
+      console.error('Add doc error:', error);
+      showToast('Không thể lưu văn bản: ' + error.message, 'error');
+      throw error;
+    }
   }, [showToast]);
 
   const deleteDocumentAction = useCallback(async (id) => {
