@@ -1,9 +1,25 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
+import { formatDate } from '../lib/utils';
+import ReaderPage from './ReaderPage';
 
 export default function HomePage({ setActiveNav }) {
-  const { user, documents } = useApp();
+  const { user, documents, logActivity } = useApp();
   
+  const [activeDoc, setActiveDoc] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [sortOrder, setSortOrder] = useState('desc'); // 'desc' = mới nhất, 'asc' = cũ nhất
+
+  const CATEGORIES = [
+    { value: 'all', label: 'Tất cả chuyên mục' },
+    { value: 'hinh-su', label: 'Hình sự' },
+    { value: 'to-tung-hinh-su', label: 'Tố tụng Hình sự' },
+    { value: 'nghiep-vu', label: 'Nghiệp vụ Điều tra' },
+    { value: 'tham-nhung', label: 'Phòng chống tham nhũng' },
+    { value: 'hanh-chinh', label: 'Hành chính' },
+    { value: 'dan-su', label: 'Dân sự' },
+    { value: 'khac', label: 'Khác' },
+  ];
   const stats = [
     { label: 'Văn bản', value: documents.length, icon: '📚', color: 'text-gold' },
     { label: 'Điều khoản', value: documents.reduce((s, d) => s + d.content.chapters.reduce((cs, c) => cs + c.articles.length, 0), 0), icon: '📄', color: 'text-accent-green' },
@@ -11,12 +27,27 @@ export default function HomePage({ setActiveNav }) {
     { label: 'Cập nhật', value: '2026', icon: '🕐', color: 'text-accent-amber' },
   ];
   
-  const quickLinks = [
-    { id: 'doc-001', icon: '⚖️', title: 'BLTTHS 2015', cat: 'Tố tụng Hình sự' },
-    { id: 'doc-002', icon: '📋', title: 'BLHS 2015', cat: 'Hình sự' },
-    { id: 'doc-003', icon: '🔬', title: 'Quy trình Vật chứng', cat: 'Nghiệp vụ' },
-    { id: 'doc-005', icon: '💬', title: 'Kỹ thuật Hỏi cung', cat: 'Nghiệp vụ' },
-  ];
+  const filteredDocs = useMemo(() => {
+    let result = documents;
+    if (selectedCategory !== 'all') {
+      result = result.filter(d => d.category === selectedCategory);
+    }
+    result = [...result].sort((a, b) => {
+      const dateA = new Date(a.updatedAt || a.created_at || 0).getTime();
+      const dateB = new Date(b.updatedAt || b.created_at || 0).getTime();
+      return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+    });
+    return result;
+  }, [documents, selectedCategory, sortOrder]);
+
+  const handleOpenDoc = (doc) => {
+    logActivity(user.id, 'VIEW_DOC', doc.id);
+    setActiveDoc(doc);
+  };
+
+  if (activeDoc) {
+    return <ReaderPage doc={activeDoc} searchTerm="" onBack={() => setActiveDoc(null)} />;
+  }
 
   return (
     <div className="p-[20px_16px] max-w-[860px] mx-auto animate-fade-up">
@@ -47,24 +78,50 @@ export default function HomePage({ setActiveNav }) {
         ))}
       </div>
 
-      {/* Quick access */}
+      {/* Document List */}
       <div className="bg-white/5 rounded-xl border border-gold/10 overflow-hidden mb-4">
-        <div className="p-[12px_16px] border-b border-white/5 font-bold text-sm text-gold">
-          ⚡ Truy cập nhanh
+        <div className="p-[16px] border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div className="font-bold text-sm text-gold">
+            📄 Danh sách văn bản
+          </div>
+          <div className="flex gap-2">
+            <select 
+              value={selectedCategory} 
+              onChange={e => setSelectedCategory(e.target.value)}
+              className="p-1.5 rounded bg-white/10 border border-white/20 text-white text-xs outline-none focus:border-gold cursor-pointer [&>option]:bg-[#0a2318] [&>option]:text-white"
+            >
+              {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+            </select>
+            <select 
+              value={sortOrder} 
+              onChange={e => setSortOrder(e.target.value)}
+              className="p-1.5 rounded bg-white/10 border border-white/20 text-white text-xs outline-none focus:border-gold cursor-pointer [&>option]:bg-[#0a2318] [&>option]:text-white"
+            >
+              <option value="desc">Mới cập nhật</option>
+              <option value="asc">Cũ nhất</option>
+            </select>
+          </div>
         </div>
-        <div className="grid grid-cols-2">
-          {quickLinks.map((l, i) => (
-            <button key={l.id} onClick={() => setActiveNav('search')}
-              className={`p-[14px_16px] border-none bg-transparent cursor-pointer text-left flex items-center gap-2.5 transition-colors min-h-[60px] hover:bg-gold/5
-                ${i % 2 === 0 ? 'border-r border-white/5' : ''}
-                ${i < 2 ? 'border-b border-white/5' : ''}`}>
-              <span className="text-[22px]">{l.icon}</span>
-              <div>
-                <div className="text-[13px] font-semibold text-white">{l.title}</div>
-                <div className="text-[11px] text-white/40">{l.cat}</div>
+        <div className="flex flex-col">
+          {filteredDocs.length > 0 ? filteredDocs.map((doc, i) => (
+            <div key={doc.id} onClick={() => handleOpenDoc(doc)}
+              className={`p-[14px_16px] border-none bg-transparent cursor-pointer text-left flex items-start gap-3 transition-colors hover:bg-gold/5
+                ${i < filteredDocs.length - 1 ? 'border-b border-white/5' : ''}`}>
+              <div className="text-[20px] shrink-0 mt-0.5">📄</div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[13px] font-bold text-white mb-1 truncate">{doc.title}</div>
+                <div className="flex flex-wrap items-center gap-2 text-[10px]">
+                  <span className="bg-navy px-1.5 py-0.5 rounded text-white font-semibold">{doc.categoryLabel || 'Khác'}</span>
+                  <span className="text-white/40">{doc.issue_number}</span>
+                  <span className="text-gold/60">• Cập nhật: {formatDate(doc.updatedAt || doc.created_at)}</span>
+                </div>
               </div>
-            </button>
-          ))}
+            </div>
+          )) : (
+            <div className="p-8 text-center text-white/50 text-sm">
+              Không có văn bản nào trong chuyên mục này.
+            </div>
+          )}
         </div>
       </div>
 
