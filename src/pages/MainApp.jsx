@@ -39,11 +39,7 @@ export default function MainApp() {
         <header className="lg:hidden flex items-center justify-between p-3 border-b border-white/5 bg-[#0a2318]/95 backdrop-blur-md z-30">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 flex-shrink-0">
-               <svg viewBox="0 0 40 40" className="w-full h-full">
-                  <path d="M20 2 L36 8 L36 20 C36 29 29 36 20 39 C11 36 4 29 4 20 L4 8 Z" fill="#1e3a8a" stroke="#FFD700" strokeWidth="1.5"/>
-                  <path d="M20 5 L33 10 L33 20 C33 27.5 27 34 20 37 C13 34 7 27.5 7 20 L7 10 Z" fill="#0a2318" stroke="#FFD700" strokeWidth="0.5"/>
-                  <text x="20" y="24" textAnchor="middle" fill="#FFD700" fontSize="12" fontWeight="bold" fontFamily="serif">★</text>
-                </svg>
+               <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
             </div>
             <div>
               <div className="text-gold text-[11px] font-extrabold uppercase">Cẩm nang</div>
