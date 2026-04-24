@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cẩm nang Pháp luật & Nghiệp vụ Điều tra Hình sự</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script src="mock-data.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Be Vietnam Pro', sans-serif; background: #0a2318; color: #e2f0e8; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: #0a2318; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,215,0,0.25); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,215,0,0.45); }
+
+    @keyframes spin    { to { transform: rotate(360deg); } }
+    @keyframes slideIn { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }
+    @keyframes fadeUp  { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes sidebarIn { from { transform:translateX(-100%); } to { transform:translateX(0); } }
+
+    input, button, select, textarea { font-family: inherit; }
+    mark { border-radius: 2px; }
+    button { -webkit-tap-highlight-color: transparent; }
+
+    /* Sidebar responsive */
+    .sidebar {
+      position: fixed; top: 0; left: 0; bottom: 0; width: 248px;
+      background: linear-gradient(180deg, #0a2318 0%, #113a26 100%);
+      z-index: 200; display: flex; flex-direction: column;
+      transition: transform 0.28s cubic-bezier(.4,0,.2,1);
+      box-shadow: 4px 0 24px rgba(0,0,0,0.35);
+      will-change: transform;
+    }
+    .sidebar.open  { transform: translateX(0); }
+    .sidebar.closed { transform: translateX(-100%); }
+
+    /* Desktop: always visible */
+    @media (min-width: 1024px) {
+      .sidebar { transform: translateX(0) !important; }
+      .sidebar-overlay { display: none !important; }
+      .main-with-sidebar { margin-left: 248px !important; }
+      .hamburger-btn { display: none !important; }
+    }
+
+    .sidebar-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+      z-index: 199; backdrop-filter: blur(2px);
+    }
+    .main-with-sidebar { margin-left: 0; transition: margin-left 0.28s; }
+
+    /* Mobile table → card list */
+    @media (max-width: 640px) {
+      .admin-table thead { display: none; }
+      .admin-table tr { display: flex; flex-direction: column; background: #fff; border-radius: 10px; margin-bottom: 10px; border: 1px solid #e2e8f0; padding: 12px 14px; gap: 4px; }
+      .admin-table td { padding: 2px 0 !important; border: none !important; }
+      .admin-table td::before { content: attr(data-label); font-size: 10px; color: #94a3b8; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 2px; }
+      .admin-table tbody { display: block; }
+      .admin-table { display: block; }
+    }
+
+    /* Mobile log list */
+    @media (max-width: 640px) {
+      .log-row { flex-direction: column !important; gap: 4px !important; }
+      .log-row .log-time { align-self: flex-start; }
+    }
+
+    /* Reader mobile */
+    @media (max-width: 767px) {
+      .reader-toc-sidebar {
+        position: fixed !important; top: 110px !important; left: 0 !important; right: 0 !important;
+        width: 100% !important; max-height: 55vh !important;
+        border-radius: 0 0 16px 16px !important; z-index: 100 !important;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.2) !important;
+      }
+      .reader-layout { flex-direction: column !important; }
+      .reader-main { padding: 16px 12px 80px !important; }
+    }
+
+    /* Touch targets */
+    @media (max-width: 1023px) {
+      .nav-item { min-height: 48px !important; }
+      .action-btn { min-height: 40px !important; }
+    }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="AppContext.jsx"></script>
+<script type="text/babel" src="Login.jsx"></script>
+<script type="text/babel" src="Search.jsx"></script>
+<script type="text/babel" src="Reader.jsx"></script>
+<script type="text/babel" src="Admin.jsx"></script>
+
+<script type="text/babel">
+const { useState, useEffect, useCallback } = React;
+
+/* ── Hook responsive ── */
+function useIsDesktop() {
+  const [desk, setDesk] = useState(() => window.innerWidth >= 1024);
+  useEffect(() => {
+    const fn = () => setDesk(window.innerWidth >= 1024);
+    window.addEventListener('resize', fn, { passive: true });
+    return () => window.removeEventListener('resize', fn);
+  }, []);
+  return desk;
+}
+
+/* ──────────────────────────────────────────
+   SIDEBAR
+────────────────────────────────────────── */
+function Sidebar({ activeNav, setActiveNav, onLogout, user, open, onClose }) {
+  const navItems = [
+    { id: 'home',   icon: '🏠', label: 'Trang chủ' },
+    { id: 'search', icon: '🔍', label: 'Tra cứu văn bản' },
+    ...(user.role === 'admin' ? [{ id: 'admin', icon: '⚙️', label: 'Quản trị hệ thống' }] : []),
+  ];
+
+  const handleNav = (id) => { setActiveNav(id); onClose(); };
+
+  return (
+    <>
+      {/* Overlay (mobile only via CSS) */}
+      {open && <div className="sidebar-overlay" onClick={onClose} />}
+
+      <aside className={`sidebar ${open ? 'open' : 'closed'}`}>
+        {/* Logo */}
+        <div style={{ padding:'18px 16px', borderBottom:'1px solid rgba(255,215,0,0.12)', display:'flex', alignItems:'center', gap:10 }}>
+          <div style={{ width:38, height:38, flexShrink:0 }}>
+            <svg viewBox="0 0 40 40" style={{ width:'100%', height:'100%' }}>
+              <path d="M20 2 L36 8 L36 20 C36 29 29 36 20 39 C11 36 4 29 4 20 L4 8 Z" fill="#1e3a8a" stroke="#FFD700" strokeWidth="1.5"/>
+              <path d="M20 5 L33 10 L33 20 C33 27.5 27 34 20 37 C13 34 7 27.5 7 20 L7 10 Z" fill="#0a2318" stroke="#FFD700" strokeWidth="0.5"/>
+              <text x="20" y="24" textAnchor="middle" fill="#FFD700" fontSize="12" fontWeight="bold" fontFamily="serif">★</text>
+            </svg>
+          </div>
+          <div style={{ flex:1, minWidth:0 }}>
+            <div style={{ color:'#FFD700', fontSize:12, fontWeight:800, letterSpacing:0.5 }}>CẨM NANG</div>
+            <div style={{ color:'rgba(255,255,255,0.5)', fontSize:10 }}>Pháp luật &amp; Nghiệp vụ</div>
+          </div>
+          {/* Close btn – hidden on desktop via CSS */}
+          <button className="hamburger-btn" onClick={onClose}
+            style={{ background:'rgba(255,255,255,0.08)', border:'none', color:'rgba(255,255,255,0.6)', width:32, height:32, borderRadius:8, cursor:'pointer', fontSize:16, display:'flex', alignItems:'center', justifyContent:'center' }}>✕</button>
+        </div>
+
+        {/* User card */}
+        <div style={{ padding:'12px 14px', borderBottom:'1px solid rgba(255,255,255,0.07)', display:'flex', alignItems:'center', gap:10 }}>
+          <div style={{ width:38, height:38, borderRadius:'50%', background:'linear-gradient(135deg,#1e3a8a,#3b82f6)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:15, fontWeight:800, color:'#fff', flexShrink:0 }}>
+            {user.full_name.charAt(user.full_name.lastIndexOf(' ')+1)}
+          </div>
+          <div style={{ minWidth:0, flex:1 }}>
+            <div style={{ color:'#fff', fontSize:12, fontWeight:700, overflow:'hidden', whiteSpace:'nowrap', textOverflow:'ellipsis' }}>{user.full_name}</div>
+            <div style={{ color:'rgba(255,255,255,0.45)', fontSize:10, overflow:'hidden', whiteSpace:'nowrap', textOverflow:'ellipsis' }}>{user.unit}</div>
+          </div>
+          {user.role === 'admin' && (
+            <span style={{ background:'#FFD700', color:'#0a2318', fontSize:9, fontWeight:800, padding:'2px 7px', borderRadius:4, flexShrink:0 }}>ADMIN</span>
+          )}
+        </div>
+
+        {/* Nav */}
+        <nav style={{ flex:1, padding:'10px 8px', display:'flex', flexDirection:'column', gap:2, overflowY:'auto' }}>
+          {navItems.map(item => {
+            const active = activeNav === item.id;
+            return (
+              <button key={item.id} className="nav-item"
+                onClick={() => handleNav(item.id)}
+                style={{
+                  display:'flex', alignItems:'center', gap:12, padding:'11px 14px',
+                  borderRadius:8, cursor:'pointer', transition:'all 0.15s', border:'none', width:'100%', textAlign:'left',
+                  background: active ? 'rgba(255,215,0,0.12)' : 'transparent',
+                  color: active ? '#FFD700' : 'rgba(255,255,255,0.72)',
+                  fontWeight: active ? 700 : 400, fontSize:14,
+                  borderLeft: active ? '3px solid #FFD700' : '3px solid transparent',
+                }}>
+                <span style={{ fontSize:18, width:22, textAlign:'center' }}>{item.icon}</span>
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Footer */}
+        <div style={{ padding:'10px 8px', borderTop:'1px solid rgba(255,255,255,0.07)' }}>
+          <button onClick={onLogout}
+            style={{ display:'flex', alignItems:'center', gap:10, padding:'11px 14px', borderRadius:8, border:'none', width:'100%', background:'rgba(153,27,27,0.2)', color:'#fca5a5', cursor:'pointer', fontSize:13, fontWeight:600, transition:'background 0.15s' }}
+            onMouseEnter={e => e.currentTarget.style.background='rgba(153,27,27,0.4)'}
+            onMouseLeave={e => e.currentTarget.style.background='rgba(153,27,27,0.2)'}>
+            <span>🚪</span> Đăng xuất
+          </button>
+          <div style={{ color:'rgba(255,255,255,0.18)', fontSize:10, textAlign:'center', marginTop:8 }}>v2.1 — Bảo mật CẤP MẬT</div>
+        </div>
+      </aside>
+    </>
+  );
+}
+
+/* ──────────────────────────────────────────
+   HOME PAGE
+────────────────────────────────────────── */
+function HomePage({ setActiveNav }) {
+  const { user } = useApp();
+  const stats = [
+    { label:'Văn bản', value: window.MOCK_DOCUMENTS.length, icon:'📚', color:'#FFD700' },
+    { label:'Điều khoản', value: window.MOCK_DOCUMENTS.reduce((s,d) => s + d.content.chapters.reduce((cs,c) => cs+c.articles.length,0),0), icon:'📄', color:'#6ee7b7' },
+    { label:'Danh mục', value: 4, icon:'🗂', color:'#60a5fa' },
+    { label:'Cập nhật', value:'2026', icon:'🕐', color:'#fbbf24' },
+  ];
+  const quickLinks = [
+    { id:'doc-001', icon:'⚖️', title:'BLTTHS 2015', cat:'Tố tụng Hình sự' },
+    { id:'doc-002', icon:'📋', title:'BLHS 2015', cat:'Hình sự' },
+    { id:'doc-003', icon:'🔬', title:'Quy trình Vật chứng', cat:'Nghiệp vụ' },
+    { id:'doc-005', icon:'💬', title:'Kỹ thuật Hỏi cung', cat:'Nghiệp vụ' },
+  ];
+
+  return (
+    <div style={{ padding:'20px 16px', maxWidth:860, margin:'0 auto', animation:'fadeUp 0.3s ease' }}>
+      {/* Hero */}
+      <div style={{ background:'linear-gradient(135deg,#113a26 0%,#1e3a8a 100%)', borderRadius:14, padding:'24px 20px', marginBottom:20, color:'#fff', position:'relative', overflow:'hidden' }}>
+        <div style={{ position:'absolute', right:-30, top:-30, width:150, height:150, borderRadius:'50%', background:'rgba(255,215,0,0.05)', pointerEvents:'none' }}></div>
+        <div style={{ fontSize:11, color:'rgba(255,215,0,0.8)', letterSpacing:1, textTransform:'uppercase', marginBottom:6, fontWeight:600 }}>Hệ thống Tra cứu Nội bộ</div>
+        <h1 style={{ fontSize:20, fontWeight:800, margin:'0 0 6px', lineHeight:1.3 }}>
+          Chào, {user.full_name.split(' ').slice(-2).join(' ')}
+        </h1>
+        <p style={{ color:'rgba(255,255,255,0.65)', fontSize:13, margin:'0 0 18px', lineHeight:1.6 }}>
+          {user.unit}
+        </p>
+        <button onClick={() => setActiveNav('search')}
+          style={{ padding:'10px 20px', borderRadius:8, background:'#FFD700', color:'#0a2318', border:'none', fontWeight:800, fontSize:14, cursor:'pointer' }}>
+          🔍 Bắt đầu tra cứu
+        </button>
+      </div>
+
+      {/* Stats grid */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(4, 1fr)', gap:10, marginBottom:20 }}>
+        {stats.map(s => (
+          <div key={s.label} style={{ background:'rgba(255,255,255,0.05)', borderRadius:10, padding:'14px 10px', border:'1px solid rgba(255,255,255,0.08)', textAlign:'center' }}>
+            <div style={{ fontSize:22, marginBottom:2 }}>{s.icon}</div>
+            <div style={{ fontSize:20, fontWeight:800, color:s.color }}>{s.value}</div>
+            <div style={{ fontSize:10, color:'rgba(255,255,255,0.45)', marginTop:1, fontWeight:500 }}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Quick access */}
+      <div style={{ background:'rgba(255,255,255,0.04)', borderRadius:12, border:'1px solid rgba(255,215,0,0.12)', overflow:'hidden', marginBottom:16 }}>
+        <div style={{ padding:'12px 16px', borderBottom:'1px solid rgba(255,255,255,0.07)', fontWeight:700, fontSize:14, color:'#FFD700' }}>
+          ⚡ Truy cập nhanh
+        </div>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(2, 1fr)' }}>
+          {quickLinks.map((l, i) => (
+            <button key={l.id} onClick={() => setActiveNav('search')}
+              style={{
+                padding:'14px 16px', border:'none', background:'transparent', cursor:'pointer', textAlign:'left',
+                borderRight: i%2===0 ? '1px solid rgba(255,255,255,0.07)' : 'none',
+                borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.07)' : 'none',
+                display:'flex', alignItems:'center', gap:10, transition:'background 0.15s', minHeight:60,
+              }}
+              onMouseEnter={e => e.currentTarget.style.background='rgba(255,215,0,0.06)'}
+              onMouseLeave={e => e.currentTarget.style.background='transparent'}>
+              <span style={{ fontSize:22 }}>{l.icon}</span>
+              <div>
+                <div style={{ fontSize:13, fontWeight:600, color:'#fff' }}>{l.title}</div>
+                <div style={{ fontSize:11, color:'rgba(255,255,255,0.4)' }}>{l.cat}</div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Security notice */}
+      <div style={{ padding:'12px 14px', background:'rgba(255,215,0,0.07)', border:'1px solid rgba(255,215,0,0.2)', borderRadius:8, display:'flex', gap:10, alignItems:'flex-start' }}>
+        <span style={{ fontSize:16, flexShrink:0 }}>🔒</span>
+        <p style={{ fontSize:12, color:'rgba(255,215,0,0.85)', margin:0, lineHeight:1.6 }}>
+          <strong>Bảo mật thông tin:</strong> Mọi hoạt động tra cứu đều được ghi lại và giám sát. Nghiêm cấm chia sẻ thông tin ra ngoài phạm vi cho phép.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────
+   MAIN APP (authenticated)
+────────────────────────────────────────── */
+function MainApp() {
+  const { user, logout } = useApp();
+  const isDesktop = useIsDesktop();
+  const [activeNav, setActiveNav] = useState('home');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [openDoc, setOpenDoc] = useState(null);
+
+  // Close sidebar on desktop auto-resize
+  useEffect(() => { if (isDesktop) setSidebarOpen(false); }, [isDesktop]);
+
+  // Close sidebar on nav
+  const handleNav = useCallback((id) => { setActiveNav(id); setOpenDoc(null); setSidebarOpen(false); }, []);
+
+  const PAGE_TITLES = {
+    home:'Trang chủ', search:'Tra cứu Pháp luật', admin:'Quản trị Hệ thống',
+  };
+
+  return (
+    <div style={{ display:'flex', minHeight:'100vh' }}>
+      <Sidebar
+        activeNav={activeNav} setActiveNav={handleNav}
+        onLogout={logout} user={user}
+        open={sidebarOpen || isDesktop}
+        onClose={() => setSidebarOpen(false)}
+      />
+
+      {/* Main */}
+      <div className="main-with-sidebar" style={{ flex:1, display:'flex', flexDirection:'column', minHeight:'100vh', minWidth:0 }}>
+
+        {/* Top bar */}
+        <header style={{
+          position:'sticky', top:0, zIndex:98,
+          background:'#113a26',
+          borderBottom:'1px solid rgba(255,215,0,0.15)', height:52,
+          display:'flex', alignItems:'center', gap:12, padding:'0 14px',
+          boxShadow:'0 2px 10px rgba(0,0,0,0.3)',
+        }}>
+          <button className="hamburger-btn" onClick={() => setSidebarOpen(true)}
+            style={{ background:'rgba(255,255,255,0.08)', border:'none', cursor:'pointer', fontSize:20, color:'#FFD700', padding:'4px 8px', display:'flex', alignItems:'center', justifyContent:'center', minWidth:36, minHeight:36, borderRadius:7 }}>
+            ☰
+          </button>
+
+          <div style={{ flex:1, fontWeight:700, fontSize:15, color:'#FFD700', overflow:'hidden', whiteSpace:'nowrap', textOverflow:'ellipsis' }}>
+            {openDoc ? `📖 ${openDoc.title.split(' ').slice(0,5).join(' ')}…` : PAGE_TITLES[activeNav] || ''}
+          </div>
+
+          <div style={{ display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
+            <span style={{ width:7, height:7, borderRadius:'50%', background:'#22c55e', display:'inline-block' }}></span>
+            <span style={{ fontSize:11, color:'rgba(255,255,255,0.45)' }}>An toàn</span>
+          </div>
+        </header>
+
+        {/* Page content */}
+        <main style={{ flex:1, overflowY:'auto', overflowX:'hidden' }}>
+          {openDoc ? (
+            <ReaderPage doc={openDoc} onBack={() => setOpenDoc(null)} />
+          ) : (
+            <>
+              {activeNav === 'home'   && <HomePage setActiveNav={handleNav} />}
+              {activeNav === 'search' && <SearchPage onOpenDoc={(doc) => { setOpenDoc(doc); }} />}
+              {activeNav === 'admin'  && user.role === 'admin' && <AdminPage />}
+              {activeNav === 'admin'  && user.role !== 'admin' && (
+                <div style={{ padding:48, textAlign:'center', color:'#991b1b' }}>
+                  <div style={{ fontSize:52 }}>🔒</div>
+                  <div style={{ fontSize:16, fontWeight:700, marginTop:12 }}>Không có quyền truy cập</div>
+                </div>
+              )}
+            </>
+          )}
+        </main>
+
+        {/* Bottom nav (mobile only) */}
+        {!openDoc && (
+          <nav style={{
+            display: isDesktop ? 'none' : 'flex',
+            position:'sticky', bottom:0,
+            background:'#0d2d1e',
+            borderTop:'1px solid rgba(255,215,0,0.15)',
+            zIndex:97, boxShadow:'0 -4px 16px rgba(0,0,0,0.4)',
+          }}>
+            {[
+              { id:'home', icon:'🏠', label:'Trang chủ' },
+              { id:'search', icon:'🔍', label:'Tra cứu' },
+              ...(user.role === 'admin' ? [{ id:'admin', icon:'⚙️', label:'Quản trị' }] : []),
+            ].map(item => {
+              const active = activeNav === item.id;
+              return (
+                <button key={item.id} onClick={() => handleNav(item.id)}
+                  style={{
+                    flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
+                    gap:2, padding:'8px 4px', border:'none', background:'transparent', cursor:'pointer',
+                    color: active ? '#FFD700' : 'rgba(255,255,255,0.4)', transition:'color 0.15s', minHeight:54, position:'relative',
+                  }}>
+                  <span style={{ fontSize:20 }}>{item.icon}</span>
+                  <span style={{ fontSize:10, fontWeight: active ? 700 : 400 }}>{item.label}</span>
+                  {active && <span style={{ position:'absolute', bottom:0, width:36, height:3, background:'#FFD700', borderRadius:'3px 3px 0 0' }}></span>}
+                </button>
+              );
+            })}
+          </nav>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────
+   ROOT
+────────────────────────────────────────── */
+function App() {
+  const { user } = useApp();
+  if (!user) return <LoginPage />;
+  return <MainApp />;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <AppProvider><App /></AppProvider>
+);
+</script>
+
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg">
+    <rect width="120" height="80" fill="#113a26"/>
+    <path d="M60 10 L80 17 L80 38 C80 52 72 62 60 67 C48 62 40 52 40 38 L40 17 Z" fill="#1e3a8a" stroke="#FFD700" stroke-width="2"/>
+    <text x="60" y="44" text-anchor="middle" fill="#FFD700" font-size="14" font-weight="bold">★</text>
+  </svg>
+</template>
+</body>
+</html>
