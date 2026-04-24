@@ -8,6 +8,17 @@ export default function AdminPage() {
   const { users, documents, logs, addUser, deleteUser, resetPassword, addDocument, deleteDocument, user: currentUser } = useApp();
   const [tab, setTab] = useState('users');
 
+  // Danh sách chuyên mục
+  const CATEGORIES = [
+    { value: 'hinh-su', label: 'Hình sự' },
+    { value: 'to-tung-hinh-su', label: 'Tố tụng Hình sự' },
+    { value: 'nghiep-vu', label: 'Nghiệp vụ Điều tra' },
+    { value: 'tham-nhung', label: 'Phòng chống tham nhũng' },
+    { value: 'hanh-chinh', label: 'Hành chính' },
+    { value: 'dan-su', label: 'Dân sự' },
+    { value: 'khac', label: 'Khác' },
+  ];
+
   // Add User State
   const [showUserModal, setShowUserModal] = useState(false);
   const [newUser, setNewUser] = useState({ username: '', full_name: '', unit: '', password: '' });
@@ -73,7 +84,7 @@ export default function AdminPage() {
       title: newDoc.title,
       issue_number: newDoc.issue_number,
       category: newDoc.category,
-      categoryLabel: newDoc.category === 'hinh-su' ? 'Hình sự' : 'Khác',
+      categoryLabel: CATEGORIES.find(c => c.value === newDoc.category)?.label || 'Khác',
       summary: newDoc.summary,
       drive_link: driveUrl,
       drive_link_type: fileType,
@@ -285,6 +296,14 @@ export default function AdminPage() {
                 <div>
                   <label className="block text-xs text-white/60 mb-1">Số hiệu</label>
                   <input value={newDoc.issue_number} onChange={e => setNewDoc({...newDoc, issue_number: e.target.value})} className="w-full p-2.5 rounded bg-white/5 border border-white/20 text-white outline-none focus:border-gold" />
+                </div>
+                <div>
+                  <label className="block text-xs text-white/60 mb-1">Chuyên mục</label>
+                  <select value={newDoc.category} onChange={e => setNewDoc({...newDoc, category: e.target.value})} className="w-full p-2.5 rounded bg-white/5 border border-white/20 text-white outline-none focus:border-gold cursor-pointer [&>option]:bg-[#0a2318] [&>option]:text-white">
+                    {CATEGORIES.map(c => (
+                      <option key={c.value} value={c.value}>{c.label}</option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className="block text-xs text-white/60 mb-1">Tải file đính kèm (PDF, Hình ảnh)</label>
