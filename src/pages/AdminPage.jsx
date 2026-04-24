@@ -3,10 +3,12 @@ import { useApp } from '../context/AppContext';
 import { formatDate, formatDateTime, validateFileHeader } from '../lib/utils';
 import { uploadFile } from '../lib/api';
 import Modal from '../components/Modal';
+import ReaderPage from './ReaderPage';
 
 export default function AdminPage() {
   const { users, documents, logs, addUser, deleteUser, resetPassword, addDocument, deleteDocument, user: currentUser } = useApp();
   const [tab, setTab] = useState('users');
+  const [activeDoc, setActiveDoc] = useState(null);
 
   // Danh sách chuyên mục
   const CATEGORIES = [
@@ -22,6 +24,10 @@ export default function AdminPage() {
   // Add User State
   const [showUserModal, setShowUserModal] = useState(false);
   const [newUser, setNewUser] = useState({ username: '', full_name: '', unit: '', password: '' });
+
+  if (activeDoc) {
+    return <ReaderPage doc={activeDoc} searchTerm="" onBack={() => setActiveDoc(null)} />;
+  }
 
   // Add Doc State
   const [showDocModal, setShowDocModal] = useState(false);
@@ -206,7 +212,8 @@ export default function AdminPage() {
                       </td>
                       <td className="p-3"><span className="bg-navy px-2 py-1 rounded text-[10px] text-white">{d.categoryLabel}</span></td>
                       <td className="p-3 text-[12px]">{formatDate(d.updatedAt || d.created_at)}</td>
-                      <td className="p-3">
+                      <td className="p-3 flex gap-2">
+                        <button onClick={() => setActiveDoc(d)} className="bg-blue-500/20 text-blue-300 border-none px-2 py-1 rounded text-xs cursor-pointer hover:bg-blue-500/40">Xem</button>
                         <button onClick={() => {if(window.confirm('Xóa văn bản này?')) deleteDocument(d.id)}} className="bg-red-500/20 text-red-300 border-none px-2 py-1 rounded text-xs cursor-pointer hover:bg-red-500/40">Xóa</button>
                       </td>
                     </tr>
