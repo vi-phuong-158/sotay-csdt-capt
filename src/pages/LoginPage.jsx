@@ -27,24 +27,18 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-forest-dark via-forest to-forest-deeper flex items-center justify-center p-4">
-      {/* Background pattern */}
-      <div className="fixed inset-0 opacity-[0.04] pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(45deg,#fff 0,#fff 1px,transparent 0,transparent 50%)', backgroundSize: '20px 20px' }}></div>
+    <div className="min-h-screen flex items-center justify-center p-4 bg-cover bg-center bg-no-repeat relative" style={{ backgroundImage: 'url(/background.svg)' }}>
+      {/* Background dark overlay for readability */}
+      <div className="fixed inset-0 bg-[#0a2318]/85 pointer-events-none"></div>
 
       <div className="w-full max-w-[420px] relative">
         {/* Header Logo */}
-        <div className="text-center mb-8">
-          <div className="w-20 h-20 mx-auto mb-4 relative">
-            {/* Shield SVG */}
-            <svg viewBox="0 0 80 80" className="w-full h-full">
-              <path d="M40 4 L72 16 L72 40 C72 58 58 72 40 78 C22 72 8 58 8 40 L8 16 Z" fill="#1e3a8a" stroke="#FFD700" strokeWidth="2"/>
-              <path d="M40 10 L66 20 L66 40 C66 55 54 67 40 73 C26 67 14 55 14 40 L14 20 Z" fill="#113a26" stroke="#FFD700" strokeWidth="1"/>
-              <text x="40" y="48" textAnchor="middle" fill="#FFD700" fontSize="22" fontWeight="bold" fontFamily="serif">★</text>
-              <text x="40" y="62" textAnchor="middle" fill="#FFD700" fontSize="9" fontFamily="sans-serif" letterSpacing="1">CÔNG AN</text>
-            </svg>
+        <div className="text-center mb-8 relative z-10">
+          <div className="w-24 h-24 mx-auto mb-4">
+            <img src="/logo.png" alt="Logo Công an" className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(255,215,0,0.3)]" />
           </div>
-          <h1 className="text-gold text-xl font-bold m-0 tracking-wide uppercase">Cẩm Nang Pháp Luật</h1>
-          <p className="text-white/60 text-[13px] mt-1.5 mb-0 tracking-wide">Nghiệp vụ Điều tra Hình sự — Hệ thống Bảo mật</p>
+          <h1 className="text-gold text-xl font-bold m-0 tracking-wide uppercase">Công an tỉnh Phú Thọ</h1>
+          <h2 className="text-white text-[15px] font-semibold m-0 mt-1.5 uppercase tracking-wide">Văn phòng Cảnh sát điều tra</h2>
         </div>
 
         {/* Login Card */}
