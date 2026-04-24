@@ -83,10 +83,10 @@ export default function LoginPage() {
             )}
 
             <button type="submit" disabled={loading}
-              className={`w-full p-[14px] rounded-lg border-none cursor-pointer text-white text-[15px] font-bold tracking-wide uppercase transition-all flex items-center justify-center gap-2
-                ${loading ? 'bg-navy/50' : 'bg-gradient-to-br from-navy to-navy-light shadow-[0_4px_16px_rgba(30,58,138,0.5)]'}`}>
+              className={`w-full p-[14px] rounded-lg border-none cursor-pointer text-[#0a2318] text-[15px] font-extrabold tracking-wide uppercase transition-all flex items-center justify-center gap-2
+                ${loading ? 'bg-gold/50' : 'bg-gradient-to-br from-gold to-[#d4af37] shadow-[0_4px_16px_rgba(255,215,0,0.3)] hover:shadow-[0_6px_20px_rgba(255,215,0,0.4)] hover:-translate-y-0.5'}`}>
               {loading ? (
-                <><span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin-fast"></span> Đang xác thực...</>
+                <><span className="inline-block w-4 h-4 border-2 border-[#0a2318]/30 border-t-[#0a2318] rounded-full animate-spin-fast"></span> Đang xác thực...</>
               ) : '🔐 Đăng nhập'}
             </button>
           </form>
@@ -99,8 +99,9 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <p className="text-center text-white/25 text-[11px] mt-5 tracking-wide">
-          © 2026 Bộ Công an — Phiên bản 2.1.0 — Bảo mật CẤP MẬT
+        <p className="text-center text-white/40 text-[11px] mt-5 tracking-wide leading-relaxed">
+          © 2026 Bản quyền thuộc Công an tỉnh Phú Thọ<br/>
+          Thiết kế bởi Đại úy Vi Ngọc Phương - Cán bộ Phòng PA01
         </p>
       </div>
     </div>
