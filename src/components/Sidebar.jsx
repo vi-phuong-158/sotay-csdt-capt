@@ -16,31 +16,28 @@ export default function Sidebar({ activeNav, setActiveNav, onLogout, user, open,
 
       <aside className={`sidebar ${open ? 'open' : 'closed'}`}>
         {/* Logo */}
-        <div className="p-[18px_16px] border-b border-gold/10 flex items-center gap-2.5">
+        <div className="p-[18px_16px] border-b border-forest/10 bg-forest-light flex items-center gap-2.5">
           <div className="w-[38px] h-[38px] shrink-0">
             <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="text-gold text-xs font-extrabold tracking-wide">CẨM NANG</div>
-            <div className="text-white/50 text-[10px]">Pháp luật &amp; Nghiệp vụ</div>
+            <div className="text-white/70 text-[10px] font-bold">Pháp luật &amp; Nghiệp vụ</div>
           </div>
           {/* Close btn – hidden on desktop via CSS */}
-          <button className="hamburger-btn bg-white/5 border-none text-white/60 w-8 h-8 rounded-lg cursor-pointer text-base flex items-center justify-center hover:bg-white/10" onClick={onClose}>✕</button>
+          <button className="hamburger-btn bg-white/10 border-none text-white/60 w-8 h-8 rounded-lg cursor-pointer text-base flex items-center justify-center hover:bg-white/20" onClick={onClose}>✕</button>
         </div>
 
         {/* User card */}
         {user && (
-          <div className="p-[12px_14px] border-b border-white/5 flex items-center gap-2.5">
-            <div className="w-[38px] h-[38px] rounded-full bg-gradient-to-br from-navy to-blue-500 flex items-center justify-center text-[15px] font-extrabold text-white shrink-0">
+          <div className="p-[12px_14px] border-b border-slate-100 flex items-center gap-2.5 bg-slate-50/50">
+            <div className="w-[38px] h-[38px] rounded-full bg-forest flex items-center justify-center text-[15px] font-extrabold text-gold shrink-0 border border-gold/20">
               {user.full_name?.charAt(user.full_name.lastIndexOf(' ')+1) || 'U'}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-white text-xs font-bold truncate">{user.full_name}</div>
-              <div className="text-white/45 text-[10px] truncate">{user.unit}</div>
+              <div className="text-slate-800 text-xs font-bold truncate">{user.full_name}</div>
+              <div className="text-slate-500 text-[10px] truncate">{user.unit}</div>
             </div>
-            {user.role === 'admin' && (
-              <span className="bg-gold text-forest-dark text-[9px] font-extrabold px-[7px] py-[2px] rounded shrink-0">ADMIN</span>
-            )}
           </div>
         )}
 
@@ -52,10 +49,10 @@ export default function Sidebar({ activeNav, setActiveNav, onLogout, user, open,
               <button key={item.id} className="nav-item flex items-center gap-3 p-[11px_14px] rounded-lg cursor-pointer transition-all border-none w-full text-left"
                 onClick={() => handleNav(item.id)}
                 style={{
-                  background: active ? 'rgba(255,215,0,0.12)' : 'transparent',
-                  color: active ? '#FFD700' : 'rgba(255,255,255,0.72)',
-                  fontWeight: active ? 700 : 400, fontSize:14,
-                  borderLeft: active ? '3px solid #FFD700' : '3px solid transparent',
+                  background: active ? '#f0fdf4' : 'transparent',
+                  color: active ? '#166534' : '#1e293b',
+                  fontWeight: active ? 800 : 600, fontSize:14,
+                  borderLeft: active ? '4px solid #166534' : '4px solid transparent',
                 }}>
                 <span className="text-lg w-[22px] text-center">{item.icon}</span>
                 <span>{item.label}</span>
@@ -65,12 +62,12 @@ export default function Sidebar({ activeNav, setActiveNav, onLogout, user, open,
         </nav>
 
         {/* Footer */}
-        <div className="p-[10px_8px] border-t border-white/5">
+        <div className="p-[10px_8px] border-t border-slate-100">
           <button onClick={onLogout}
-            className="flex items-center gap-2.5 p-[11px_14px] rounded-lg border-none w-full bg-crimson-light/20 text-red-300 cursor-pointer text-[13px] font-semibold transition-colors hover:bg-crimson-light/40">
+            className="flex items-center gap-2.5 p-[11px_14px] rounded-lg border-none w-full bg-red-50 text-red-600 cursor-pointer text-[13px] font-semibold transition-colors hover:bg-red-100">
             <span>🚪</span> Đăng xuất
           </button>
-          <div className="text-white/20 text-[10px] text-center mt-2">v2.1 — Bảo mật CẤP MẬT</div>
+          <div className="text-slate-400 text-[10px] text-center mt-2 font-medium"></div>
         </div>
       </aside>
     </>

@@ -14,10 +14,7 @@ export default function AdminPage() {
   const CATEGORIES = [
     { value: 'hinh-su', label: 'Hình sự' },
     { value: 'to-tung-hinh-su', label: 'Tố tụng Hình sự' },
-    { value: 'nghiep-vu', label: 'Nghiệp vụ Điều tra' },
-    { value: 'tham-nhung', label: 'Phòng chống tham nhũng' },
-    { value: 'hanh-chinh', label: 'Hành chính' },
-    { value: 'dan-su', label: 'Dân sự' },
+    { value: 'huong-dan-dieu-tra', label: 'Hướng dẫn điều tra' },
     { value: 'khac', label: 'Khác' },
   ];
 
@@ -74,18 +71,7 @@ export default function AdminPage() {
       }
     }
 
-    // Parse raw text into chapters/articles
-    // Simplified parser for demo: treats each line as an article in one chapter
-    const lines = newDoc.rawText.split('\n').filter(l => l.trim() !== '');
-    const articles = lines.map((line, idx) => {
-      const parts = line.split(':');
-      return {
-        id: `art-${Date.now()}-${idx}`,
-        title: parts.length > 1 ? parts[0].trim() : `Điều ${idx + 1}`,
-        text: parts.length > 1 ? parts.slice(1).join(':').trim() : line.trim()
-      };
-    });
-
+    // No more chapter/article splitting. Just store the raw text.
     const docObj = {
       title: newDoc.title,
       issue_number: newDoc.issue_number,
@@ -95,7 +81,7 @@ export default function AdminPage() {
       drive_link: driveUrl,
       drive_link_type: fileType,
       content: {
-        chapters: [{ id: `ch-${Date.now()}`, title: 'Chương I', articles }]
+        fullText: newDoc.rawText
       }
     };
 
@@ -114,67 +100,69 @@ export default function AdminPage() {
   return (
     <div className="p-[20px_16px] max-w-[1000px] mx-auto animate-fade-up">
       <div className="mb-6">
-        <h2 className="text-xl font-bold text-gold m-0 mb-1">Quản trị hệ thống</h2>
-        <p className="text-white/50 text-sm m-0">Quản lý tài khoản, dữ liệu và giám sát hoạt động</p>
+        <h2 className="text-xl font-bold text-forest m-0 mb-1">Quản trị hệ thống</h2>
+        <p className="text-slate-500 text-sm m-0">Quản lý tài khoản, dữ liệu và giám sát hoạt động</p>
       </div>
 
-      {/* Tabs */}
-      <div className="flex bg-[#0a2318] rounded-lg p-1 border border-white/10 mb-5 overflow-x-auto">
-        {[
-          { id: 'users', label: `Tài khoản (${users.length})`, icon: '👥' },
-          { id: 'docs', label: `Văn bản (${documents.length})`, icon: '📚' },
-          { id: 'logs', label: `Nhật ký (${logs.length})`, icon: '📋' },
-        ].map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)}
-            className={`flex-1 min-w-[120px] p-[10px] border-none rounded-md cursor-pointer font-semibold text-[13px] flex items-center justify-center gap-2 transition-colors
-              ${tab === t.id ? 'bg-navy text-white shadow-sm' : 'bg-transparent text-white/50 hover:bg-white/5'}`}>
-            <span className="text-base">{t.icon}</span> {t.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Content */}
-      <div className="bg-[#05110c] border border-white/10 rounded-xl overflow-hidden">
+      {/* Content Area */}
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+        
+        {/* Tabs Bar */}
+        <div className="flex bg-slate-50 p-1.5 border-b border-slate-200 overflow-x-auto">
+          {[
+            { id: 'users', label: `Tài khoản (${users.length})`, icon: '👥' },
+            { id: 'docs', label: `Văn bản (${documents.length})`, icon: '📚' },
+            { id: 'logs', label: `Nhật ký (${logs.length})`, icon: '📋' },
+          ].map(t => (
+            <button key={t.id} onClick={() => setTab(t.id)}
+              className={`flex-1 min-w-[120px] p-[10px] border-none rounded-lg cursor-pointer font-bold text-[13px] flex items-center justify-center gap-2 transition-all
+                ${tab === t.id ? 'bg-white text-forest shadow-sm border border-slate-200' : 'bg-transparent text-slate-600 hover:bg-slate-200/50 font-bold'}`}>
+              <span className="text-base">{t.icon}</span> {t.label}
+            </button>
+          ))}
+        </div>
         
         {/* USERS TAB */}
         {tab === 'users' && (
           <div>
-            <div className="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
-              <h3 className="text-white text-sm font-bold m-0">Danh sách tài khoản</h3>
-              <button onClick={() => setShowUserModal(true)} className="bg-gold text-forest-dark border-none px-4 py-2 rounded-lg font-bold text-xs cursor-pointer">
+            <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-white">
+              <h3 className="text-slate-800 text-sm font-bold m-0">Danh sách tài khoản</h3>
+              <button onClick={() => setShowUserModal(true)} className="bg-gold text-forest border-none px-4 py-2 rounded-lg font-bold text-xs cursor-pointer shadow-sm hover:shadow-md transition-all">
                 + Cấp tài khoản mới
               </button>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm text-white/80 border-collapse">
-                <thead className="bg-[#113a26] text-gold/80 text-[11px] uppercase">
+              <table className="w-full text-left text-sm text-slate-600 border-collapse">
+                <thead className="bg-slate-50 text-slate-500 text-[11px] uppercase tracking-wider">
                   <tr>
-                    <th className="p-3 border-b border-white/10 font-bold">Username</th>
-                    <th className="p-3 border-b border-white/10 font-bold">Họ tên / Đơn vị</th>
-                    <th className="p-3 border-b border-white/10 font-bold">Phân quyền</th>
-                    <th className="p-3 border-b border-white/10 font-bold">Thao tác</th>
+                    <th className="p-4 border-b border-slate-100 font-bold">Username</th>
+                    <th className="p-4 border-b border-slate-100 font-bold">Họ tên / Đơn vị</th>
+                    <th className="p-4 border-b border-slate-100 font-bold">Phân quyền</th>
+                    <th className="p-4 border-b border-slate-100 font-bold text-right">Thao tác</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="bg-white">
                   {users.map(u => (
-                    <tr key={u.id} className="border-b border-white/5 hover:bg-white/5">
-                      <td className="p-3 font-semibold text-white">{u.username}</td>
-                      <td className="p-3">
-                        <div className="text-white font-medium">{u.full_name}</div>
-                        <div className="text-[11px] text-white/40">{u.unit}</div>
+                    <tr key={u.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
+                      <td className="p-4 font-bold text-slate-900">{u.username}</td>
+                      <td className="p-4">
+                        <div className="text-slate-800 font-bold">{u.full_name}</div>
+                        <div className="text-[11px] text-slate-500">{u.unit}</div>
                       </td>
-                      <td className="p-3">
-                        <span className={`px-2 py-1 rounded text-[10px] font-bold ${u.role === 'admin' ? 'bg-gold text-forest-dark' : 'bg-white/10 text-white/70'}`}>
+                      <td className="p-4">
+                        <span className={`px-2 py-1 rounded text-[10px] font-bold ${u.role === 'admin' ? 'bg-gold/20 text-forest' : 'bg-slate-100 text-slate-600'}`}>
                           {u.role.toUpperCase()}
                         </span>
                       </td>
-                      <td className="p-3 flex gap-2">
-                        {u.id !== currentUser.id && (
-                          <>
-                            <button onClick={() => resetPassword(u.id, '123456')} className="bg-blue-500/20 text-blue-300 border-none px-2 py-1 rounded text-xs cursor-pointer hover:bg-blue-500/40">Reset Pass</button>
-                            <button onClick={() => {if(window.confirm('Xóa tài khoản này?')) deleteUser(u.id)}} className="bg-red-500/20 text-red-300 border-none px-2 py-1 rounded text-xs cursor-pointer hover:bg-red-500/40">Xóa</button>
-                          </>
-                        )}
+                      <td className="p-4 text-right">
+                        <div className="flex justify-end gap-2">
+                          {u.id !== currentUser.id && (
+                            <>
+                              <button onClick={() => resetPassword(u.id, '123456')} className="bg-blue-50 text-blue-600 border border-blue-100 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer hover:bg-blue-100 transition-colors">Reset Pass</button>
+                              <button onClick={() => {if(window.confirm('Xóa tài khoản này?')) deleteUser(u.id)}} className="bg-red-50 text-red-600 border border-red-100 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer hover:bg-red-100 transition-colors">Xóa</button>
+                            </>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -187,34 +175,40 @@ export default function AdminPage() {
         {/* DOCS TAB */}
         {tab === 'docs' && (
           <div>
-            <div className="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
-              <h3 className="text-white text-sm font-bold m-0">Quản lý văn bản</h3>
-              <button onClick={() => setShowDocModal(true)} className="bg-gold text-forest-dark border-none px-4 py-2 rounded-lg font-bold text-xs cursor-pointer">
+            <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-white">
+              <h3 className="text-slate-800 text-sm font-bold m-0">Quản lý văn bản</h3>
+              <button onClick={() => setShowDocModal(true)} className="bg-gold text-forest border-none px-4 py-2 rounded-lg font-bold text-xs cursor-pointer shadow-sm hover:shadow-md transition-all">
                 + Thêm văn bản
               </button>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm text-white/80 border-collapse">
-                <thead className="bg-[#113a26] text-gold/80 text-[11px] uppercase">
+              <table className="w-full text-left text-sm text-slate-600 border-collapse">
+                <thead className="bg-slate-50 text-slate-500 text-[11px] uppercase tracking-wider">
                   <tr>
-                    <th className="p-3 border-b border-white/10 font-bold">Văn bản</th>
-                    <th className="p-3 border-b border-white/10 font-bold">Chuyên mục</th>
-                    <th className="p-3 border-b border-white/10 font-bold">Ngày cập nhật</th>
-                    <th className="p-3 border-b border-white/10 font-bold">Thao tác</th>
+                    <th className="p-4 border-b border-slate-100 font-bold">Văn bản</th>
+                    <th className="p-4 border-b border-slate-100 font-bold">Chuyên mục</th>
+                    <th className="p-4 border-b border-slate-100 font-bold">Cập nhật</th>
+                    <th className="p-4 border-b border-slate-100 font-bold text-right">Thao tác</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="bg-white">
                   {documents.map(d => (
-                    <tr key={d.id} className="border-b border-white/5 hover:bg-white/5">
-                      <td className="p-3">
-                        <div className="text-white font-bold text-[13px]">{d.title}</div>
-                        <div className="text-[11px] text-white/40">{d.issue_number}</div>
+                    <tr key={d.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
+                      <td className="p-4">
+                        <div className="text-slate-900 font-bold text-[13px]">{d.title}</div>
+                        <div className="text-[11px] text-slate-500">{d.issue_number}</div>
                       </td>
-                      <td className="p-3"><span className="bg-navy px-2 py-1 rounded text-[10px] text-white">{d.categoryLabel}</span></td>
-                      <td className="p-3 text-[12px]">{formatDate(d.updatedAt || d.created_at)}</td>
-                      <td className="p-3 flex gap-2">
-                        <button onClick={() => setActiveDoc(d)} className="bg-blue-500/20 text-blue-300 border-none px-2 py-1 rounded text-xs cursor-pointer hover:bg-blue-500/40">Xem</button>
-                        <button onClick={() => {if(window.confirm('Xóa văn bản này?')) deleteDocument(d.id)}} className="bg-red-500/20 text-red-300 border-none px-2 py-1 rounded text-xs cursor-pointer hover:bg-red-500/40">Xóa</button>
+                      <td className="p-4">
+                        <span className="bg-forest/10 text-forest px-2 py-1 rounded text-[10px] font-bold">
+                          {d.categoryLabel}
+                        </span>
+                      </td>
+                      <td className="p-4 text-[12px] text-slate-500">{formatDate(d.updatedAt || d.created_at)}</td>
+                      <td className="p-4 text-right">
+                        <div className="flex justify-end gap-2">
+                          <button onClick={() => setActiveDoc(d)} className="bg-blue-50 text-blue-600 border border-blue-100 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer hover:bg-blue-100 transition-colors">Xem</button>
+                          <button onClick={() => {if(window.confirm('Xóa văn bản này?')) deleteDocument(d.id)}} className="bg-red-50 text-red-600 border border-red-100 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer hover:bg-red-100 transition-colors">Xóa</button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -227,35 +221,35 @@ export default function AdminPage() {
         {/* LOGS TAB */}
         {tab === 'logs' && (
           <div>
-            <div className="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
-              <h3 className="text-white text-sm font-bold m-0">Nhật ký hoạt động (Audit Trail)</h3>
+            <div className="p-4 border-b border-slate-100 bg-white">
+              <h3 className="text-slate-800 text-sm font-bold m-0">Nhật ký hoạt động (Audit Trail)</h3>
             </div>
             <div className="overflow-x-auto max-h-[500px]">
-              <table className="w-full text-left text-sm text-white/80 border-collapse">
-                <thead className="bg-[#113a26] text-gold/80 text-[11px] uppercase sticky top-0">
+              <table className="w-full text-left text-sm text-slate-600 border-collapse">
+                <thead className="bg-slate-50 text-slate-500 text-[11px] uppercase tracking-wider sticky top-0 z-10">
                   <tr>
-                    <th className="p-3 border-b border-white/10 font-bold">Thời gian</th>
-                    <th className="p-3 border-b border-white/10 font-bold">Người dùng</th>
-                    <th className="p-3 border-b border-white/10 font-bold">Hành động</th>
-                    <th className="p-3 border-b border-white/10 font-bold">Chi tiết</th>
+                    <th className="p-4 border-b border-slate-100 font-bold">Thời gian</th>
+                    <th className="p-4 border-b border-slate-100 font-bold">Người dùng</th>
+                    <th className="p-4 border-b border-slate-100 font-bold">Hành động</th>
+                    <th className="p-4 border-b border-slate-100 font-bold">Chi tiết</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="bg-white">
                   {logs.map(l => (
-                    <tr key={l.id} className="border-b border-white/5 hover:bg-white/5">
-                      <td className="p-3 text-[11px] text-white/50">{formatDateTime(l.created_at)}</td>
-                      <td className="p-3">
-                        <div className="text-white font-medium text-[13px]">{l.username}</div>
-                        <div className="text-[10px] text-white/30">{l.full_name}</div>
+                    <tr key={l.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
+                      <td className="p-4 text-[11px] text-slate-400">{formatDateTime(l.created_at)}</td>
+                      <td className="p-4">
+                        <div className="text-slate-900 font-bold text-[13px]">{l.username}</div>
+                        <div className="text-[10px] text-slate-500">{l.full_name}</div>
                       </td>
-                      <td className="p-3">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold 
-                          ${l.action === 'LOGIN' ? 'bg-green-500/20 text-green-300' : 
-                            l.action === 'SEARCH' ? 'bg-blue-500/20 text-blue-300' : 'bg-purple-500/20 text-purple-300'}`}>
+                      <td className="p-4">
+                        <span className={`px-2.5 py-1 rounded text-[10px] font-bold 
+                          ${l.action === 'LOGIN' ? 'bg-emerald-50 text-emerald-600' : 
+                            l.action === 'SEARCH' ? 'bg-blue-50 text-blue-600' : 'bg-purple-50 text-purple-600'}`}>
                           {l.action}
                         </span>
                       </td>
-                      <td className="p-3 text-[12px] max-w-[200px] truncate" title={l.details}>{l.details}</td>
+                      <td className="p-4 text-[12px] text-slate-600 max-w-[200px] truncate" title={l.details}>{l.details}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -270,22 +264,22 @@ export default function AdminPage() {
         <Modal title="Cấp tài khoản mới" onClose={() => setShowUserModal(false)}>
           <form onSubmit={handleAddUser} className="flex flex-col gap-4">
             <div>
-              <label className="block text-xs text-white/60 mb-1">Tên đăng nhập</label>
-              <input required value={newUser.username} onChange={e => setNewUser({...newUser, username: e.target.value})} className="w-full p-2.5 rounded bg-white/5 border border-white/20 text-white outline-none focus:border-gold" />
+              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Tên đăng nhập</label>
+              <input required value={newUser.username} onChange={e => setNewUser({...newUser, username: e.target.value})} className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 outline-none focus:border-forest/50 focus:bg-white transition-all" />
             </div>
             <div>
-              <label className="block text-xs text-white/60 mb-1">Mật khẩu</label>
-              <input required value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} className="w-full p-2.5 rounded bg-white/5 border border-white/20 text-white outline-none focus:border-gold" />
+              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Mật khẩu</label>
+              <input required value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 outline-none focus:border-forest/50 focus:bg-white transition-all" />
             </div>
             <div>
-              <label className="block text-xs text-white/60 mb-1">Họ tên</label>
-              <input required value={newUser.full_name} onChange={e => setNewUser({...newUser, full_name: e.target.value})} className="w-full p-2.5 rounded bg-white/5 border border-white/20 text-white outline-none focus:border-gold" />
+              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Họ tên</label>
+              <input required value={newUser.full_name} onChange={e => setNewUser({...newUser, full_name: e.target.value})} className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 outline-none focus:border-forest/50 focus:bg-white transition-all" />
             </div>
             <div>
-              <label className="block text-xs text-white/60 mb-1">Đơn vị</label>
-              <input required value={newUser.unit} onChange={e => setNewUser({...newUser, unit: e.target.value})} className="w-full p-2.5 rounded bg-white/5 border border-white/20 text-white outline-none focus:border-gold" />
+              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Đơn vị</label>
+              <input required value={newUser.unit} onChange={e => setNewUser({...newUser, unit: e.target.value})} className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 outline-none focus:border-forest/50 focus:bg-white transition-all" />
             </div>
-            <button type="submit" className="w-full p-3 rounded bg-gold text-forest-dark font-bold mt-2 border-none cursor-pointer">Lưu tài khoản</button>
+            <button type="submit" className="w-full p-4 rounded-xl bg-gold text-forest font-bold mt-2 border-none cursor-pointer shadow-lg shadow-gold/20 hover:bg-gold/90 transition-all">Lưu tài khoản</button>
           </form>
         </Modal>
       )}
@@ -297,44 +291,44 @@ export default function AdminPage() {
             {docStep === 1 && (
               <>
                 <div>
-                  <label className="block text-xs text-white/60 mb-1">Tên văn bản</label>
-                  <input required value={newDoc.title} onChange={e => setNewDoc({...newDoc, title: e.target.value})} className="w-full p-2.5 rounded bg-white/5 border border-white/20 text-white outline-none focus:border-gold" />
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Tên văn bản</label>
+                  <input required value={newDoc.title} onChange={e => setNewDoc({...newDoc, title: e.target.value})} className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 outline-none focus:border-forest/50 focus:bg-white transition-all" />
                 </div>
                 <div>
-                  <label className="block text-xs text-white/60 mb-1">Số hiệu</label>
-                  <input value={newDoc.issue_number} onChange={e => setNewDoc({...newDoc, issue_number: e.target.value})} className="w-full p-2.5 rounded bg-white/5 border border-white/20 text-white outline-none focus:border-gold" />
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Số hiệu</label>
+                  <input value={newDoc.issue_number} onChange={e => setNewDoc({...newDoc, issue_number: e.target.value})} className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 outline-none focus:border-forest/50 focus:bg-white transition-all" />
                 </div>
                 <div>
-                  <label className="block text-xs text-white/60 mb-1">Chuyên mục</label>
-                  <select value={newDoc.category} onChange={e => setNewDoc({...newDoc, category: e.target.value})} className="w-full p-2.5 rounded bg-white/5 border border-white/20 text-white outline-none focus:border-gold cursor-pointer [&>option]:bg-[#0a2318] [&>option]:text-white">
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Chuyên mục</label>
+                  <select value={newDoc.category} onChange={e => setNewDoc({...newDoc, category: e.target.value})} className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 outline-none focus:border-forest/50 focus:bg-white transition-all cursor-pointer">
                     {CATEGORIES.map(c => (
                       <option key={c.value} value={c.value}>{c.label}</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs text-white/60 mb-1">Tải file đính kèm (PDF, Hình ảnh)</label>
-                  <input type="file" accept=".pdf,image/*" onChange={e => setSelectedFile(e.target.files[0])} className="w-full p-2 rounded bg-white/5 border border-white/20 text-white/70 outline-none focus:border-gold file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gold file:text-forest-dark hover:file:bg-gold/80" />
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Tải file đính kèm (PDF, Hình ảnh)</label>
+                  <input type="file" accept=".pdf,image/*" onChange={e => setSelectedFile(e.target.files[0])} className="w-full p-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-500 outline-none focus:border-forest/50 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-forest file:text-gold hover:file:bg-forest-dark transition-all" />
                 </div>
                 <div>
-                  <label className="block text-xs text-white/60 mb-1">Tóm tắt</label>
-                  <textarea rows={3} value={newDoc.summary} onChange={e => setNewDoc({...newDoc, summary: e.target.value})} className="w-full p-2.5 rounded bg-white/5 border border-white/20 text-white outline-none focus:border-gold resize-y" />
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Tóm tắt</label>
+                  <textarea rows={3} value={newDoc.summary} onChange={e => setNewDoc({...newDoc, summary: e.target.value})} className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 outline-none focus:border-forest/50 focus:bg-white transition-all resize-y" />
                 </div>
-                <button onClick={() => setDocStep(2)} className="w-full p-3 rounded bg-navy text-white font-bold mt-2 border-none cursor-pointer">Tiếp tục: Nhập nội dung</button>
+                <button onClick={() => setDocStep(2)} className="w-full p-4 rounded-xl bg-forest text-white font-bold mt-2 border-none cursor-pointer shadow-lg shadow-forest/20 hover:bg-forest-dark transition-all">Tiếp tục: Nhập nội dung</button>
               </>
             )}
             {docStep === 2 && (
               <>
-                <div className="text-xs text-gold/80 bg-gold/10 p-2 rounded">
-                  Dán nội dung văn bản vào đây. Mỗi dòng sẽ được chuyển thành một Điều. Format: "Điều X: Nội dung..."
+                <div className="text-[11px] font-bold text-forest bg-forest/5 p-3 rounded-xl border border-forest/10 mb-2">
+                  Dán nội dung văn bản vào đây. Hệ thống sẽ hiển thị đúng như định dạng bạn đã dán.
                 </div>
                 <div>
-                  <textarea rows={10} value={newDoc.rawText} onChange={e => setNewDoc({...newDoc, rawText: e.target.value})} placeholder="Điều 1: Phạm vi..." className="w-full p-2.5 rounded bg-white/5 border border-white/20 text-white outline-none focus:border-gold resize-y font-mono text-xs" />
+                  <textarea rows={10} value={newDoc.rawText} onChange={e => setNewDoc({...newDoc, rawText: e.target.value})} placeholder="Điều 1: Phạm vi..." className="w-full p-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 outline-none focus:border-forest/50 focus:bg-white transition-all resize-y font-mono text-xs leading-relaxed" />
                 </div>
-                <div className="flex gap-2 mt-2">
-                  <button onClick={() => setDocStep(1)} className="flex-1 p-3 rounded bg-white/10 text-white font-bold border-none cursor-pointer">Quay lại</button>
-                  <button onClick={handleAddDoc} disabled={isUploading} className="flex-[2] p-3 rounded bg-gold text-forest-dark font-bold border-none cursor-pointer disabled:opacity-50">
-                    {isUploading ? 'Đang tải file & lưu...' : 'Lưu văn bản'}
+                <div className="flex gap-2 mt-4">
+                  <button onClick={() => setDocStep(1)} className="flex-1 p-4 rounded-xl bg-slate-100 text-slate-600 font-bold border-none cursor-pointer hover:bg-slate-200 transition-all">Quay lại</button>
+                  <button onClick={handleAddDoc} disabled={isUploading} className="flex-[2] p-4 rounded-xl bg-gold text-forest font-bold border-none cursor-pointer disabled:opacity-50 shadow-lg shadow-gold/20 hover:bg-gold/90 transition-all">
+                    {isUploading ? 'Đang xử lý...' : 'Lưu văn bản'}
                   </button>
                 </div>
               </>

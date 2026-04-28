@@ -7,8 +7,9 @@
   html { scroll-behavior: smooth; }
   body {
     font-family: 'Be Vietnam Pro', ui-sans-serif, system-ui, sans-serif;
-    background: #0a2318;
-    color: #e2f0e8;
+    background: #f8fafc; /* Lighter background */
+    color: #0f172a; /* Darker slate text (950) for maximum contrast */
+    font-weight: 500; /* Bolder by default */
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
   }
@@ -19,10 +20,10 @@
 
 @layer utilities {
   /* Custom scrollbar */
-  ::-webkit-scrollbar { width: 5px; height: 5px; }
-  ::-webkit-scrollbar-track { background: #0a2318; }
-  ::-webkit-scrollbar-thumb { background: rgba(255,215,0,0.25); border-radius: 4px; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(255,215,0,0.45); }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #f1f5f9; }
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+  ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
   /* Animations */
   @keyframes spin { to { transform: rotate(360deg); } }
@@ -36,10 +37,11 @@
   /* Sidebar */
   .sidebar {
     position: fixed; top: 0; left: 0; bottom: 0; width: 248px;
-    background: linear-gradient(180deg, #0a2318 0%, #113a26 100%);
+    background: white;
     z-index: 200; display: flex; flex-direction: column;
     transition: transform 0.28s cubic-bezier(.4,0,.2,1);
-    box-shadow: 4px 0 24px rgba(0,0,0,0.35);
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    border-right: 1px solid #e2e8f0;
     will-change: transform;
   }
   .sidebar.open  { transform: translateX(0); }
@@ -64,5 +66,5 @@
   }
 
   /* Input placeholder color */
-  input::placeholder, textarea::placeholder { color: rgba(255,255,255,0.3); }
+  input::placeholder, textarea::placeholder { color: #94a3b8; }
 }

@@ -6,10 +6,10 @@ export default {
       colors: {
         // Design system — Công an nhân dân & Pháp luật
         forest: {
-          DEFAULT: '#113a26',
-          dark: '#0a2318',
+          DEFAULT: '#1a5c3d', // Lighter than #113a26
+          dark: '#113a26',    // Old DEFAULT
           deeper: '#0d2d1e',
-          light: '#1a5c3d',
+          light: '#247a51',
         },
         navy: {
           DEFAULT: '#1e3a8a',

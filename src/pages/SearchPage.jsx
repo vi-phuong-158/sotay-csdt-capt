@@ -80,21 +80,21 @@ export default function SearchPage() {
   return (
     <div className="flex flex-col h-full animate-fade-up">
       {/* Search Bar Fixed */}
-      <div className="sticky top-0 z-10 bg-[#0a2318]/95 backdrop-blur-md p-[16px] border-b border-gold/10">
+      <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-md p-[16px] border-b border-slate-200">
         <div className="relative max-w-[800px] mx-auto">
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Nhập từ khóa (hỗ trợ tiếng Việt không dấu)..."
-            className="w-full p-[14px_45px] rounded-full border border-gold/30 bg-white/5 text-white text-[15px] outline-none shadow-[0_4px_12px_rgba(0,0,0,0.2)] focus:border-gold/80 transition-colors"
+            placeholder="Nhập từ khóa, số hiệu văn bản..."
+            className="w-full p-[14px_45px] rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-[15px] outline-none shadow-sm focus:border-forest/50 focus:bg-white transition-all"
             autoFocus
           />
-          <span className="absolute left-[18px] top-1/2 -translate-y-1/2 text-[18px] text-gold/60">🔍</span>
+          <span className="absolute left-[18px] top-1/2 -translate-y-1/2 text-[18px] text-slate-400">🔍</span>
           {query && (
             <button
               onClick={() => setQuery('')}
-              className="absolute right-[18px] top-1/2 -translate-y-1/2 bg-white/10 w-6 h-6 rounded-full border-none text-white/80 cursor-pointer flex items-center justify-center text-xs hover:bg-white/20"
+              className="absolute right-[18px] top-1/2 -translate-y-1/2 bg-slate-200/50 w-6 h-6 rounded-full border-none text-slate-600 cursor-pointer flex items-center justify-center text-[10px] hover:bg-slate-200 transition-all"
             >✕</button>
           )}
         </div>
@@ -104,19 +104,19 @@ export default function SearchPage() {
       <div className="flex-1 overflow-y-auto p-[20px_16px]">
         <div className="max-w-[800px] mx-auto">
           {isSearching && (
-            <div className="text-center text-gold/70 p-5 text-sm">Đang tìm kiếm...</div>
+            <div className="text-center text-forest p-5 text-sm font-bold tracking-widest animate-pulse">ĐANG TÌM KIẾM...</div>
           )}
           
           {!isSearching && query && results.length === 0 && (
-            <div className="text-center text-white/50 p-10 bg-white/5 rounded-xl border border-white/5">
+            <div className="text-center text-slate-400 p-10 bg-white rounded-2xl border border-slate-100 shadow-sm">
               <div className="text-4xl mb-3">📄</div>
               Không tìm thấy kết quả phù hợp cho "{query}"
             </div>
           )}
 
           {!isSearching && results.length > 0 && (
-            <div className="mb-4 text-xs font-semibold text-gold/70 uppercase tracking-wide">
-              Tìm thấy {results.length} văn bản
+            <div className="mb-4 text-xs font-bold text-slate-500 uppercase tracking-widest">
+              Tìm thấy {results.length} văn bản phù hợp
             </div>
           )}
 
@@ -125,24 +125,24 @@ export default function SearchPage() {
               <div
                 key={doc.id}
                 onClick={() => handleOpenDoc(doc)}
-                className="bg-white/5 border border-white/10 rounded-xl p-[16px_18px] cursor-pointer transition-all hover:border-gold/40 hover:-translate-y-0.5"
+                className="bg-white border border-slate-200 rounded-2xl p-6 cursor-pointer transition-all hover:border-forest/40 hover:shadow-lg hover:shadow-slate-200/50"
               >
                 <div className="flex justify-between items-start gap-4 mb-2">
-                  <h3 className="m-0 text-gold text-base font-bold leading-snug">{doc.title}</h3>
-                  <span className="shrink-0 bg-navy text-white text-[10px] font-bold px-[8px] py-[3px] rounded">
+                  <h3 className="m-0 text-forest-dark text-base font-bold leading-snug">{doc.title}</h3>
+                  <span className="shrink-0 bg-forest/10 text-forest text-[10px] font-bold px-[8px] py-[3px] rounded">
                     {doc.categoryLabel}
                   </span>
                 </div>
-                <div className="text-[12px] text-white/60 mb-2 font-medium">{doc.issue_number}</div>
-                <p className="m-0 text-[13px] text-white/80 leading-relaxed mb-3">{doc.summary}</p>
+                <div className="text-[12px] text-slate-700 mb-2 font-bold">{doc.issue_number}</div>
+                <p className="m-0 text-[13px] text-slate-800 leading-relaxed mb-4 font-medium">{doc.summary}</p>
                 
                 {doc.topMatches.length > 0 && (
-                  <div className="bg-[#05110c] rounded-lg p-3 border border-white/5">
-                    <div className="text-[11px] font-bold text-accent-green mb-1.5 uppercase tracking-wide">Trích đoạn nổi bật</div>
+                  <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                    <div className="text-[11px] font-bold text-forest mb-2 uppercase tracking-widest">Trích đoạn nổi bật</div>
                     {doc.topMatches.map((m, idx) => (
-                      <div key={idx} className="mb-2 last:mb-0 pb-2 last:pb-0 border-b last:border-0 border-white/5">
-                        <div className="text-[11px] font-semibold text-white/70 mb-1">{m.artTitle}</div>
-                        <div className="text-[12px] text-white/50 line-clamp-2 italic leading-relaxed">
+                      <div key={idx} className="mb-2 last:mb-0 pb-2 last:pb-0 border-b last:border-0 border-slate-200/50">
+                        <div className="text-[11px] font-bold text-slate-700 mb-1">{m.artTitle}</div>
+                        <div className="text-[12px] text-slate-500 line-clamp-2 italic leading-relaxed">
                           "{m.text}"
                         </div>
                       </div>
@@ -154,10 +154,10 @@ export default function SearchPage() {
           </div>
 
           {!query && (
-            <div className="text-center p-10">
-              <div className="text-5xl opacity-20 mb-4">📚</div>
-              <h3 className="text-gold/50 font-medium m-0">Tra cứu nhanh chóng, chính xác</h3>
-              <p className="text-white/30 text-xs mt-2">Hỗ trợ tìm kiếm tiếng Việt không dấu</p>
+            <div className="text-center p-12">
+              <div className="text-5xl opacity-10 mb-4">📚</div>
+              <h3 className="text-slate-400 font-bold m-0 tracking-wide">Tra cứu nhanh chóng, chính xác</h3>
+              <p className="text-slate-400 text-xs mt-2 font-medium uppercase tracking-widest opacity-60">Hỗ trợ tìm kiếm theo số hiệu hoặc nội dung</p>
             </div>
           )}
         </div>
