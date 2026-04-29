@@ -69,6 +69,18 @@ export function formatDate(iso) {
 }
 
 /**
+ * Chuyển link chia sẻ Google Drive sang URL nhúng iframe (preview)
+ */
+export const getGoogleDriveEmbedUrl = (url) => {
+  if (!url || typeof url !== 'string') return '';
+  const idMatch = url.match(/[-\w]{25,}/);
+  if (url.includes('drive.google.com') && idMatch) {
+    return `https://drive.google.com/file/d/${idMatch[0]}/preview`;
+  }
+  return url;
+};
+
+/**
  * Lấy URL hiển thị ảnh trực tiếp từ Google Drive (Google Proxy lh3)
  * Theo chuẩn google-apps-script-cms
  */

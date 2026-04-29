@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { removeVietnameseDiacritics, getDirectImageUrl } from '../lib/utils';
+import { removeVietnameseDiacritics, getDirectImageUrl, getGoogleDriveEmbedUrl } from '../lib/utils';
 
 export default function ReaderPage({ doc, searchTerm, onBack }) {
   const [activeId, setActiveId] = useState('');
@@ -106,27 +106,32 @@ export default function ReaderPage({ doc, searchTerm, onBack }) {
               )}
             </div>
             
-            {/* Image display */}
+            {/* File đính kèm */}
             {doc.drive_link && doc.drive_link_type === 'image' ? (
               <div className="mt-6">
-                <img 
-                  src={getDirectImageUrl(doc.drive_link)} 
-                  alt="Ảnh đính kèm" 
-                  className="max-w-full h-auto rounded-2xl shadow-2xl border border-slate-100" 
-                  loading="lazy" 
+                <img
+                  src={getDirectImageUrl(doc.drive_link)}
+                  alt="Ảnh đính kèm"
+                  className="max-w-full h-auto rounded-2xl shadow-2xl border border-slate-100"
+                  loading="lazy"
                 />
               </div>
             ) : doc.drive_link ? (
-              <div className="mt-10 flex flex-col items-center gap-4 p-8 rounded-3xl bg-forest/5 border-2 border-dashed border-forest/20">
-                <div className="text-4xl">📄</div>
-                <div className="text-center">
-                  <div className="font-bold text-forest mb-1">Văn bản có file PDF đính kèm</div>
-                  <div className="text-xs text-slate-500">Bấm vào nút bên dưới để xem toàn văn trên Google Drive</div>
+              <div className="mt-6">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Toàn văn</span>
+                  <a href={doc.drive_link} target="_blank" rel="noopener noreferrer"
+                    className="text-xs font-bold text-forest hover:underline">
+                    Mở tab mới ↗
+                  </a>
                 </div>
-                <a href={doc.drive_link} target="_blank" rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2.5 bg-forest text-gold px-8 py-4 rounded-2xl font-bold no-underline transition-all hover:bg-forest/90 hover:shadow-xl hover:shadow-forest/20 active:scale-95">
-                  Mở bản gốc (PDF) →
-                </a>
+                <iframe
+                  src={getGoogleDriveEmbedUrl(doc.drive_link)}
+                  className="w-full rounded-2xl border border-slate-200 shadow-sm"
+                  style={{ height: '80vh', minHeight: '500px' }}
+                  allow="autoplay"
+                  title="Toàn văn văn bản"
+                />
               </div>
             ) : (
               <div className="mt-10 text-center p-8 text-slate-400 italic text-sm">
