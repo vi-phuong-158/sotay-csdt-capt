@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { fuzzyMatch } from '../lib/utils';
 import ReaderPage from './ReaderPage';
@@ -26,7 +26,6 @@ export default function SearchPage() {
 
       documents.forEach(doc => {
         let docScore = 0;
-        const matches = [];
 
         // Metadata search
         if (fuzzyMatch(doc.title, q)) docScore += 10;
@@ -133,7 +132,7 @@ export default function SearchPage() {
                     {doc.doc_date ? new Date(doc.doc_date).toLocaleDateString('vi-VN') : '---'}
                   </div>
                 </div>
-                <p className="m-0 text-[13px] text-slate-800 leading-relaxed mb-4 font-medium">{doc.summary}</p>
+                <p className="m-0 text-[13px] text-slate-800 leading-relaxed mb-4 font-medium whitespace-pre-wrap">{doc.summary}</p>
                 
                 <p className="m-0 text-[13px] text-slate-800 leading-relaxed mb-1 font-medium">{doc.summary}</p>
               </div>

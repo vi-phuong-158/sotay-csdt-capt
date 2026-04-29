@@ -101,7 +101,7 @@ export default function ReaderPage({ doc, searchTerm, onBack }) {
               {doc.summary && (
                 <div className="flex flex-col gap-1 md:col-span-2 pt-2 border-t border-slate-100">
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tóm tắt văn bản</span>
-                  <p className="m-0 text-sm font-bold text-slate-600 italic leading-relaxed">{doc.summary}</p>
+                  <p className="m-0 text-sm font-bold text-slate-600 italic leading-relaxed whitespace-pre-wrap">{doc.summary}</p>
                 </div>
               )}
             </div>
