@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { removeVietnameseDiacritics, getDirectImageUrl, getGoogleDriveEmbedUrl } from '../lib/utils';
+import { useBookmarks, docKey } from '../hooks/useBookmarks';
 
 export default function ReaderPage({ doc, searchTerm, onBack }) {
+  const { toggleBookmark, isBookmarked } = useBookmarks();
   const [activeId, setActiveId] = useState('');
   const [fontSize, setFontSize] = useState(15);
   const [showToc, setShowToc] = useState(false);
@@ -69,6 +71,12 @@ export default function ReaderPage({ doc, searchTerm, onBack }) {
           <div className="text-[10px] md:text-[11px] text-white/70 truncate">{doc.issue_number}</div>
         </div>
         <div className="flex gap-1.5 shrink-0">
+          <button
+            onClick={() => toggleBookmark(docKey(doc))}
+            className={`bg-white/10 border-none rounded-lg w-8 h-8 md:w-9 md:h-9 flex items-center justify-center cursor-pointer text-lg hover:bg-white/20 transition-all
+              ${isBookmarked(docKey(doc)) ? 'text-gold' : 'text-white/50'}`}
+            title={isBookmarked(docKey(doc)) ? 'Bỏ ghim' : 'Ghim văn bản'}
+          >★</button>
           <button onClick={() => setFontSize(f => Math.max(12, f - 1))} className="bg-white/10 border-none rounded-lg w-8 h-8 md:w-9 md:h-9 flex items-center justify-center text-white cursor-pointer font-bold hover:bg-white/20 transition-all">A-</button>
           <button onClick={() => setFontSize(f => Math.min(24, f + 1))} className="bg-white/10 border-none rounded-lg w-8 h-8 md:w-9 md:h-9 flex items-center justify-center text-white cursor-pointer font-bold text-lg hover:bg-white/20 transition-all">A+</button>
         </div>
@@ -101,7 +109,7 @@ export default function ReaderPage({ doc, searchTerm, onBack }) {
               {doc.summary && (
                 <div className="flex flex-col gap-1 md:col-span-2 pt-2 border-t border-slate-100">
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tóm tắt văn bản</span>
-                  <p className="m-0 text-sm font-bold text-slate-600 italic leading-relaxed whitespace-pre-wrap">{doc.summary}</p>
+                  <p className="m-0 text-sm text-slate-600 leading-relaxed whitespace-pre-wrap text-justify">{doc.summary}</p>
                 </div>
               )}
             </div>

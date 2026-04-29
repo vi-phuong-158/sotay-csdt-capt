@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import Modal from './Modal';
+import { useApp } from '../context/AppContext';
 
 const NOTEBOOK_URL = 'https://notebooklm.google.com/notebook/53536c72-fb38-4b28-a622-435079600f14';
 
 export default function Sidebar({ activeNav, setActiveNav, onLogout, user, open, onClose }) {
+  const { newDocsCount } = useApp();
   const [showAIModal, setShowAIModal] = useState(false);
   const navItems = [
     { id: 'home',   icon: '🏠', label: 'Trang chủ' },
@@ -58,8 +60,18 @@ export default function Sidebar({ activeNav, setActiveNav, onLogout, user, open,
                   fontWeight: active ? 800 : 600, fontSize:14,
                   borderLeft: active ? '4px solid #166534' : '4px solid transparent',
                 }}>
-                <span className="text-lg w-[22px] text-center">{item.icon}</span>
-                <span>{item.label}</span>
+                <span className="relative text-lg w-[22px] text-center">
+                  {item.icon}
+                  {item.id === 'home' && newDocsCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-0.5 rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center leading-none">
+                      {newDocsCount > 9 ? '9+' : newDocsCount}
+                    </span>
+                  )}
+                </span>
+                <span className="flex-1">{item.label}</span>
+                {item.id === 'home' && newDocsCount > 0 && (
+                  <span className="text-[10px] font-bold text-red-500 bg-red-50 px-1.5 py-0.5 rounded-full">Mới</span>
+                )}
               </button>
             );
           })}

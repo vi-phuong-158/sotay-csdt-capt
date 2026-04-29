@@ -11,6 +11,7 @@ export function AppProvider({ children }) {
   const [users, setUsers] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [newDocsCount, setNewDocsCount] = useState(0);
 
   // Khôi phục session và fetch data
   useEffect(() => {
@@ -83,19 +84,31 @@ export function AppProvider({ children }) {
     apiLogActivity(username, action, details).catch(e => console.error("Log error", e));
   }, [users]);
 
+  const clearNewDocs = useCallback(() => setNewDocsCount(0), []);
+
   const login = useCallback((username, password) => {
     const found = users.find(u => u.username === username && u.password === password);
     if (!found) return { error: 'Tên đăng nhập hoặc mật khẩu không đúng.' };
-    
+
+    // Đếm văn bản mới kể từ lần đăng nhập trước
+    const lastLogin = localStorage.getItem('plnd_last_login');
+    if (lastLogin) {
+      const count = documents.filter(d =>
+        d.created_at && new Date(d.created_at) > new Date(lastLogin)
+      ).length;
+      if (count > 0) setNewDocsCount(count);
+    }
+    localStorage.setItem('plnd_last_login', new Date().toISOString());
+
     const sessionUser = { ...found };
     delete sessionUser.password;
     setUser(sessionUser);
     localStorage.setItem('plnd_session', JSON.stringify(sessionUser));
-    
+
     logActivity(found.id, 'LOGIN', 'Đăng nhập thành công');
     showToast(`Chào mừng, ${found.full_name}!`, 'success');
     return { success: true };
-  }, [users, logActivity, showToast]);
+  }, [users, documents, logActivity, showToast]);
 
   const logout = useCallback(() => {
     setUser(null);
@@ -153,10 +166,11 @@ export function AppProvider({ children }) {
   }, [showToast]);
 
   return (
-    <AppContext.Provider value={{ 
-      user, loading, login, logout, logs, users, documents, 
-      addUser, deleteUser: deleteUserAction, resetPassword, 
-      logActivity, showToast, addDocument, deleteDocument: deleteDocumentAction 
+    <AppContext.Provider value={{
+      user, loading, login, logout, logs, users, documents,
+      newDocsCount, clearNewDocs,
+      addUser, deleteUser: deleteUserAction, resetPassword,
+      logActivity, showToast, addDocument, deleteDocument: deleteDocumentAction
     }}>
       {children}
       <ToastContainer toasts={toasts} />
