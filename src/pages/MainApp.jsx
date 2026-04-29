@@ -12,10 +12,19 @@ export default function MainApp() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="flex flex-col items-center gap-4 text-forest">
-          <div className="w-10 h-10 border-4 border-forest/10 border-t-forest rounded-full animate-spin-fast" />
-          <div className="font-bold tracking-widest text-sm">ĐANG TẢI DỮ LIỆU...</div>
+      <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
+        <div className="flex flex-col items-center gap-5">
+          <div className="relative">
+            <img src="/logo.png" alt="Logo" className="w-20 h-20 object-contain animate-pulse" />
+          </div>
+          <div className="flex flex-col items-center gap-2">
+            <div className="font-bold text-forest text-sm tracking-widest uppercase">Đang tải dữ liệu...</div>
+            <div className="flex gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-forest/40 animate-bounce" style={{ animationDelay: '0ms' }} />
+              <span className="w-1.5 h-1.5 rounded-full bg-forest/40 animate-bounce" style={{ animationDelay: '150ms' }} />
+              <span className="w-1.5 h-1.5 rounded-full bg-forest/40 animate-bounce" style={{ animationDelay: '300ms' }} />
+            </div>
+          </div>
         </div>
       </div>
     );
