@@ -1,6 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
+import Modal from './Modal';
+
+const NOTEBOOK_URL = 'https://notebooklm.google.com/notebook/53536c72-fb38-4b28-a622-435079600f14';
 
 export default function Sidebar({ activeNav, setActiveNav, onLogout, user, open, onClose }) {
+  const [showAIModal, setShowAIModal] = useState(false);
   const navItems = [
     { id: 'home',   icon: '🏠', label: 'Trang chủ' },
     { id: 'search', icon: '🔍', label: 'Tra cứu văn bản' },
@@ -63,19 +67,16 @@ export default function Sidebar({ activeNav, setActiveNav, onLogout, user, open,
           {/* Divider */}
           <div className="my-2 border-t border-slate-100" />
 
-          {/* Sổ tay AI — external link */}
-          <a
-            href="https://notebooklm.google.com/notebook/53536c72-fb38-4b28-a622-435079600f14"
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={onClose}
-            className="flex items-center gap-3 p-[11px_14px] rounded-lg transition-all no-underline group"
-            style={{ borderLeft: '4px solid transparent', fontSize: 14, fontWeight: 600, color: '#1e293b' }}
+          {/* Sổ tay AI */}
+          <button
+            onClick={() => { setShowAIModal(true); onClose(); }}
+            className="flex items-center gap-3 p-[11px_14px] rounded-lg transition-all border-none w-full text-left cursor-pointer group"
+            style={{ borderLeft: '4px solid transparent', fontSize: 14, fontWeight: 600, color: '#1e293b', background: 'transparent' }}
           >
             <span className="text-lg w-[22px] text-center">🤖</span>
             <span className="flex-1">Sổ tay AI</span>
             <span className="text-[10px] font-bold text-slate-400 group-hover:text-forest transition-colors">↗</span>
-          </a>
+          </button>
         </nav>
 
         {/* Footer */}
@@ -87,6 +88,38 @@ export default function Sidebar({ activeNav, setActiveNav, onLogout, user, open,
           <div className="text-slate-400 text-[10px] text-center mt-2 font-medium"></div>
         </div>
       </aside>
+      {showAIModal && (
+        <Modal title="🤖 Sổ tay AI" onClose={() => setShowAIModal(false)}>
+          <div className="flex flex-col gap-5">
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3">
+              <span className="text-xl shrink-0">⚠️</span>
+              <p className="m-0 text-sm text-amber-800 leading-relaxed font-medium">
+                Tính năng này sử dụng <strong>Google NotebookLM</strong>. Bạn cần đăng nhập tài khoản Google trên trình duyệt trước khi truy cập.
+              </p>
+            </div>
+            <p className="m-0 text-sm text-slate-500 leading-relaxed">
+              Sổ tay AI tổng hợp và trả lời câu hỏi dựa trên toàn bộ văn bản pháp luật đã được nạp vào hệ thống.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowAIModal(false)}
+                className="flex-1 p-3 rounded-xl bg-slate-100 text-slate-600 font-bold border-none cursor-pointer hover:bg-slate-200 transition-all text-sm"
+              >
+                Huỷ
+              </button>
+              <a
+                href={NOTEBOOK_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setShowAIModal(false)}
+                className="flex-[2] p-3 rounded-xl bg-forest text-gold font-bold no-underline text-center cursor-pointer hover:bg-forest/90 transition-all text-sm"
+              >
+                Đã hiểu, mở Sổ tay AI ↗
+              </a>
+            </div>
+          </div>
+        </Modal>
+      )}
     </>
   );
 }
