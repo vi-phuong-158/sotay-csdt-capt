@@ -59,6 +59,23 @@ export default function Sidebar({ activeNav, setActiveNav, onLogout, user, open,
               </button>
             );
           })}
+
+          {/* Divider */}
+          <div className="my-2 border-t border-slate-100" />
+
+          {/* Sổ tay AI — external link */}
+          <a
+            href="https://notebooklm.google.com/notebook/53536c72-fb38-4b28-a622-435079600f14"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={onClose}
+            className="flex items-center gap-3 p-[11px_14px] rounded-lg transition-all no-underline group"
+            style={{ borderLeft: '4px solid transparent', fontSize: 14, fontWeight: 600, color: '#1e293b' }}
+          >
+            <span className="text-lg w-[22px] text-center">🤖</span>
+            <span className="flex-1">Sổ tay AI</span>
+            <span className="text-[10px] font-bold text-slate-400 group-hover:text-forest transition-colors">↗</span>
+          </a>
         </nav>
 
         {/* Footer */}
