@@ -3,68 +3,154 @@
 @tailwind utilities;
 
 @layer base {
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html { scroll-behavior: smooth; }
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
   body {
-    font-family: 'Be Vietnam Pro', ui-sans-serif, system-ui, sans-serif;
+    font-family: "Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif;
     background: #f8fafc; /* Lighter background */
     color: #0f172a; /* Darker slate text (950) for maximum contrast */
     font-weight: 500; /* Bolder by default */
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
   }
-  input, button, select, textarea { font-family: inherit; }
-  mark { border-radius: 2px; }
-  button { -webkit-tap-highlight-color: transparent; }
+  input,
+  button,
+  select,
+  textarea {
+    font-family: inherit;
+  }
+  mark {
+    border-radius: 2px;
+  }
+  button {
+    -webkit-tap-highlight-color: transparent;
+  }
 }
 
 @layer utilities {
   /* Custom scrollbar */
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: #f1f5f9; }
-  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-  ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #f1f5f9;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
 
   /* Animations */
-  @keyframes spin { to { transform: rotate(360deg); } }
-  @keyframes slideIn { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }
-  @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  @keyframes fadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 
-  .animate-slide-in { animation: slideIn 0.3s ease; }
-  .animate-fade-up { animation: fadeUp 0.3s ease; }
-  .animate-spin-fast { animation: spin 0.8s linear infinite; }
+  .animate-slide-in {
+    animation: slideIn 0.3s ease;
+  }
+  .animate-fade-up {
+    animation: fadeUp 0.3s ease;
+  }
+  .animate-spin-fast {
+    animation: spin 0.8s linear infinite;
+  }
 
   /* Sidebar */
   .sidebar {
-    position: fixed; top: 0; left: 0; bottom: 0; width: 248px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 248px;
     background: white;
-    z-index: 200; display: flex; flex-direction: column;
-    transition: transform 0.28s cubic-bezier(.4,0,.2,1);
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow:
+      0 4px 6px -1px rgb(0 0 0 / 0.1),
+      0 2px 4px -2px rgb(0 0 0 / 0.1);
     border-right: 1px solid #e2e8f0;
     will-change: transform;
   }
-  .sidebar.open  { transform: translateX(0); }
-  .sidebar.closed { transform: translateX(-100%); }
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  .sidebar.closed {
+    transform: translateX(-100%);
+  }
 
   @media (min-width: 1024px) {
-    .sidebar { transform: translateX(0) !important; }
-    .sidebar-overlay { display: none !important; }
-    .main-with-sidebar { margin-left: 248px !important; }
-    .hamburger-btn { display: none !important; }
+    .sidebar {
+      transform: translateX(0) !important;
+    }
+    .sidebar-overlay {
+      display: none !important;
+    }
+    .main-with-sidebar {
+      margin-left: 248px !important;
+    }
+    .hamburger-btn {
+      display: none !important;
+    }
   }
 
   .sidebar-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.55);
-    z-index: 199; backdrop-filter: blur(2px);
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 199;
+    backdrop-filter: blur(2px);
   }
-  .main-with-sidebar { margin-left: 0; transition: margin-left 0.28s; }
+  .main-with-sidebar {
+    margin-left: 0;
+    transition: margin-left 0.28s;
+  }
 
   /* Reader ToC mobile */
   @media (max-width: 767px) {
-    .toc-tap-overlay { display: block !important; }
+    .toc-tap-overlay {
+      display: block !important;
+    }
   }
 
   /* Input placeholder color */
-  input::placeholder, textarea::placeholder { color: #94a3b8; }
+  input::placeholder,
+  textarea::placeholder {
+    color: #94a3b8;
+  }
 }

@@ -1,55 +1,84 @@
-/**
- * Google Apps Script - Cẩm Nang Pháp Luật Backend
- *
- * Yêu cầu:
- * 1. Tạo một Google Sheet có 3 tab (sheet): "users", "documents", "activity_logs"
- * 2. Copy code này vào Extensions > Apps Script
- * 3. Chạy hàm setup() một lần (chọn setup trong toolbar và nhấn Run) để tạo các bảng tự động
- * 4. Deploy > New deployment > Web app > Anyone (cho phép truy cập public)
- */
-
 function setup() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheets = ["users", "documents", "activity_logs"];
   var headers = {
-    "users": ["id", "username", "password", "full_name", "unit", "role", "lastLogin"],
-    "documents": ["id", "title", "issue_number", "doc_date", "issuing_authority", "summary", "category", "categoryLabel", "drive_link", "drive_link_type", "updatedAt", "created_at"],
-    "activity_logs": ["id", "timestamp", "username", "action", "details", "created_at"]
+    users: [
+      "id",
+      "username",
+      "password",
+      "full_name",
+      "unit",
+      "role",
+      "lastLogin",
+    ],
+    documents: [
+      "id",
+      "title",
+      "issue_number",
+      "doc_date",
+      "issuing_authority",
+      "summary",
+      "category",
+      "categoryLabel",
+      "drive_link",
+      "drive_link_type",
+      "updatedAt",
+      "created_at",
+    ],
+    activity_logs: [
+      "id",
+      "timestamp",
+      "username",
+      "action",
+      "details",
+      "created_at",
+    ],
   };
 
-  sheets.forEach(function(name) {
+  sheets.forEach(function (name) {
     var sheet = ss.getSheetByName(name);
     if (!sheet) {
-      // Nếu chưa có sheet thì tạo mới hoàn toàn
       sheet = ss.insertSheet(name);
       sheet.appendRow(headers[name]);
-      sheet.getRange(1, 1, 1, headers[name].length).setFontWeight("bold").setBackground("#e2f0e8");
+      sheet
+        .getRange(1, 1, 1, headers[name].length)
+        .setFontWeight("bold")
+        .setBackground("#e2f0e8");
     } else {
-      // Nếu đã có sheet, kiểm tra xem có thiếu cột nào không
       var lastCol = sheet.getLastColumn();
-      var existingHeaders = lastCol > 0 ? sheet.getRange(1, 1, 1, lastCol).getValues()[0] : [];
-      var missingHeaders = headers[name].filter(function(h) {
+      var existingHeaders =
+        lastCol > 0 ? sheet.getRange(1, 1, 1, lastCol).getValues()[0] : [];
+      var missingHeaders = headers[name].filter(function (h) {
         return existingHeaders.indexOf(h) === -1;
       });
-      
+
       if (missingHeaders.length > 0) {
-        // Bổ sung các cột còn thiếu vào cuối
-        sheet.getRange(1, lastCol + 1, 1, missingHeaders.length)
-             .setValues([missingHeaders])
-             .setFontWeight("bold")
-             .setBackground("#fff2cc"); // Màu vàng nhạt cho các cột mới bổ sung
+        sheet
+          .getRange(1, lastCol + 1, 1, missingHeaders.length)
+          .setValues([missingHeaders])
+          .setFontWeight("bold")
+          .setBackground("#fff2cc");
       }
     }
   });
-  
-  // Tạo tài khoản admin mặc định nếu sheet users trống
+
   var userSheet = ss.getSheetByName("users");
   if (userSheet.getLastRow() < 2) {
-    userSheet.appendRow(["admin-001", "admin", "admin123", "Quản trị viên", "Hệ thống", "admin", new Date().toISOString()]);
+    userSheet.appendRow([
+      "admin-001",
+      "admin",
+      "admin123",
+      "Quản trị viên",
+      "Hệ thống",
+      "admin",
+      new Date().toISOString(),
+    ]);
   }
-  
+
   return "Đã thiết lập và cập nhật cấu trúc các bảng thành công!";
 }
+
+var SECRET_KEY = "CSDT_CAPT_SECRET";
 
 function doGet(e) {
   try {
@@ -58,6 +87,10 @@ function doGet(e) {
 
     if (!action || !sheetName) {
       return responseJson({ error: "Missing action or sheet parameter" }, 400);
+    }
+
+    if (sheetName === "users") {
+      return responseJson({ error: "Unauthorized access to users sheet" }, 403);
     }
 
     var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
@@ -71,9 +104,30 @@ function doGet(e) {
     }
 
     return responseJson({ error: "Invalid GET action" }, 400);
-
   } catch (error) {
     return responseJson({ error: error.toString() }, 500);
+  }
+}
+
+function validateToken(token) {
+  if (!token) return false;
+  try {
+    var decoded = Utilities.newString(Utilities.base64Decode(token));
+    var parts = decoded.split(":");
+    if (parts.length !== 3) return false;
+
+    var username = parts[0];
+    var timestamp = parts[1];
+    var key = parts[2];
+
+    if (key !== SECRET_KEY) return false;
+
+    var now = new Date().getTime();
+    if (now - parseInt(timestamp) > 24 * 60 * 60 * 1000) return false;
+
+    return true;
+  } catch (e) {
+    return false;
   }
 }
 
@@ -86,20 +140,98 @@ function doPost(e) {
       return responseJson({ error: "Missing action in body" }, 400);
     }
 
-    // Xử lý upload file lên Drive
+    if (action === "login") {
+      var username = body.username;
+      var password = body.password;
+
+      if (!username || !password)
+        return responseJson({ error: "Thiếu thông tin đăng nhập" }, 400);
+
+      var userSheet =
+        SpreadsheetApp.getActiveSpreadsheet().getSheetByName("users");
+      var users = getSheetDataAsObjects(userSheet);
+
+      var user = users.find(function (u) {
+        return u.username === username && u.password === password;
+      });
+
+      if (user) {
+        var timestamp = new Date().getTime();
+        var rawToken = username + ":" + timestamp + ":" + SECRET_KEY;
+        var token = Utilities.base64Encode(rawToken);
+
+        var rowIndex = findRowIndexById(userSheet, user.id);
+        var headers = getHeaders(userSheet);
+        var loginIdx = headers.indexOf("lastLogin");
+        if (loginIdx !== -1) {
+          userSheet
+            .getRange(rowIndex, loginIdx + 1)
+            .setValue(new Date().toISOString());
+        }
+
+        return responseJson(
+          {
+            success: true,
+            token: token,
+            user: {
+              id: user.id,
+              username: user.username,
+              full_name: user.full_name,
+              unit: user.unit,
+              role: user.role,
+            },
+          },
+          200,
+        );
+      } else {
+        return responseJson(
+          { success: false, error: "Sai tên đăng nhập hoặc mật khẩu" },
+          401,
+        );
+      }
+    }
+
+    if (!validateToken(body.token)) {
+      return responseJson(
+        {
+          error:
+            "Phiên đăng nhập hết hạn hoặc không hợp lệ. Vui lòng đăng nhập lại.",
+        },
+        403,
+      );
+    }
+
+    if (action === "admin_get_users") {
+      var userSheet =
+        SpreadsheetApp.getActiveSpreadsheet().getSheetByName("users");
+      var data = getSheetDataAsObjects(userSheet);
+      data.forEach(function (u) {
+        delete u.password;
+      });
+      return responseJson({ success: true, rows: data }, 200);
+    }
+
     if (action === "upload") {
       var fileName = body.fileName;
       var mimeType = body.mimeType;
       var dataBase64 = body.data;
 
-      if (!fileName || !dataBase64) return responseJson({ error: "Missing file data" }, 400);
+      if (!fileName || !dataBase64)
+        return responseJson({ error: "Missing file data" }, 400);
 
       var decodedData = Utilities.base64Decode(dataBase64);
-      var blob = Utilities.newBlob(decodedData, mimeType || 'application/pdf', fileName);
-      
+      var blob = Utilities.newBlob(
+        decodedData,
+        mimeType || "application/pdf",
+        fileName,
+      );
+
       var file = DriveApp.createFile(blob);
-      file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-      
+      file.setSharing(
+        DriveApp.Access.ANYONE_WITH_LINK,
+        DriveApp.Permission.VIEW,
+      );
+
       return responseJson({ success: true, url: file.getUrl() }, 200);
     }
 
@@ -118,17 +250,15 @@ function doPost(e) {
       if (!rowObj) return responseJson({ error: "Missing row data" }, 400);
 
       var headers = getHeaders(sheet);
-      
-      // Nếu sheet chưa có header, tự động tạo header từ object keys
+
       if (headers.length === 0) {
         headers = Object.keys(rowObj);
         sheet.appendRow(headers);
       }
 
-      var rowData = headers.map(function(h) {
+      var rowData = headers.map(function (h) {
         var val = rowObj[h];
-        // Handle nested objects (like document content)
-        if (typeof val === 'object' && val !== null) {
+        if (typeof val === "object" && val !== null) {
           return JSON.stringify(val);
         }
         return val === undefined ? "" : val;
@@ -141,17 +271,20 @@ function doPost(e) {
     if (action === "update") {
       var id = body.id;
       var updates = body.updates;
-      if (!id || !updates) return responseJson({ error: "Missing id or updates" }, 400);
+      if (!id || !updates)
+        return responseJson({ error: "Missing id or updates" }, 400);
 
       var rowIndex = findRowIndexById(sheet, id);
-      if (rowIndex === -1) return responseJson({ error: "Row not found with id: " + id }, 404);
+      if (rowIndex === -1)
+        return responseJson({ error: "Row not found with id: " + id }, 404);
 
       var headers = getHeaders(sheet);
       for (var key in updates) {
         var colIndex = headers.indexOf(key);
         if (colIndex !== -1) {
           var val = updates[key];
-          if (typeof val === 'object' && val !== null) val = JSON.stringify(val);
+          if (typeof val === "object" && val !== null)
+            val = JSON.stringify(val);
           sheet.getRange(rowIndex, colIndex + 1).setValue(val);
         }
       }
@@ -163,20 +296,18 @@ function doPost(e) {
       if (!id) return responseJson({ error: "Missing id" }, 400);
 
       var rowIndex = findRowIndexById(sheet, id);
-      if (rowIndex === -1) return responseJson({ error: "Row not found with id: " + id }, 404);
+      if (rowIndex === -1)
+        return responseJson({ error: "Row not found with id: " + id }, 404);
 
       sheet.deleteRow(rowIndex);
       return responseJson({ success: true }, 200);
     }
 
     return responseJson({ error: "Invalid POST action" }, 400);
-
   } catch (error) {
     return responseJson({ error: error.toString() }, 500);
   }
 }
-
-// ================= Helpers =================
 
 function responseJson(data, code) {
   var output = ContentService.createTextOutput(JSON.stringify(data));
@@ -193,7 +324,7 @@ function getHeaders(sheet) {
 function getSheetDataAsObjects(sheet) {
   var lastRow = sheet.getLastRow();
   var lastCol = sheet.getLastColumn();
-  
+
   if (lastRow < 2 || lastCol === 0) return [];
 
   var headers = getHeaders(sheet);
@@ -204,11 +335,13 @@ function getSheetDataAsObjects(sheet) {
     var obj = {};
     for (var j = 0; j < headers.length; j++) {
       var val = values[i][j];
-      // Try parsing JSON if possible (for document content)
-      if (typeof val === 'string' && (val.startsWith('{') || val.startsWith('['))) {
+      if (
+        typeof val === "string" &&
+        (val.startsWith("{") || val.startsWith("["))
+      ) {
         try {
           val = JSON.parse(val);
-        } catch(e) {}
+        } catch (e) {}
       }
       obj[headers[j]] = val;
     }
@@ -219,17 +352,17 @@ function getSheetDataAsObjects(sheet) {
 
 function findRowIndexById(sheet, id) {
   var headers = getHeaders(sheet);
-  var idColIndex = headers.indexOf('id');
-  
+  var idColIndex = headers.indexOf("id");
+
   if (idColIndex === -1) return -1;
-  
+
   var lastRow = sheet.getLastRow();
   if (lastRow < 2) return -1;
 
   var idValues = sheet.getRange(2, idColIndex + 1, lastRow - 1, 1).getValues();
   for (var i = 0; i < idValues.length; i++) {
     if (idValues[i][0] === id) {
-      return i + 2; // +2 because array is 0-indexed and row 1 is header
+      return i + 2;
     }
   }
   return -1;
