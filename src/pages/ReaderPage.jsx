@@ -75,38 +75,40 @@ export default function ReaderPage({ doc, searchTerm, onBack }) {
       </div>
 
       {/* Main Layout */}
-      <div className="max-w-[1000px] mx-auto flex">
-        {/* Table of Contents (Only for structured docs) */}
-        {doc.content.chapters && (
-          <>
-            {showToc && <div className="toc-tap-overlay hidden fixed inset-0 bg-black/50 z-40" onClick={() => setShowToc(false)} />}
-            <aside className={`fixed md:sticky top-[68px] left-0 h-[calc(100vh-68px)] w-[260px] bg-white border-r border-slate-200 overflow-y-auto p-4 z-40 transition-transform ${showToc ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} shadow-xl md:shadow-none`}>
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-3 mb-4">Mục lục văn bản</h3>
-              <div className="flex flex-col gap-1">
-                {doc.content.chapters.map(ch => (
-                  <button
-                    key={ch.id}
-                    onClick={() => scrollTo(ch.id)}
-                    className={`text-left p-3 rounded-xl text-[13px] border-none cursor-pointer transition-all
-                      ${activeId === ch.id ? 'bg-forest text-white font-black' : 'bg-transparent text-slate-900 hover:bg-slate-100 font-bold'}`}
-                  >
-                    {ch.title}
-                  </button>
-                ))}
-              </div>
-            </aside>
-          </>
-        )}
-
+      <div className="max-w-[1000px] mx-auto">
         {/* Content */}
-        <div ref={contentRef} className="flex-1 p-[24px_16px] md:p-12 bg-white min-h-screen shadow-sm" style={{ fontSize: `${fontSize}px` }}>
-          <div className="mb-10 pb-8 border-b-4 border-gold/30 text-center max-w-3xl mx-auto">
-            <h1 className="text-2xl md:text-3xl font-black text-slate-900 mb-4 leading-tight">{doc.title}</h1>
-            <div className="inline-block bg-forest/5 text-forest px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest">{doc.issue_number}</div>
+        <div ref={contentRef} className="p-[24px_16px] md:p-12 bg-white min-h-screen shadow-sm">
+          <div className="mb-10 pb-8 border-b-4 border-gold/30 max-w-3xl mx-auto">
+            <h1 className="text-2xl md:text-3xl font-black text-slate-900 mb-6 leading-tight text-center">{doc.title}</h1>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left bg-slate-50 p-6 rounded-2xl border border-slate-200 mb-8">
+              <div className="flex flex-col gap-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Số hiệu</span>
+                <span className="text-sm font-bold text-forest">{doc.issue_number || '---'}</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ngày ban hành</span>
+                <span className="text-sm font-bold text-forest">{doc.doc_date ? new Date(doc.doc_date).toLocaleDateString('vi-VN') : '---'}</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Cơ quan phát hành</span>
+                <span className="text-sm font-bold text-forest">{doc.issuing_authority || '---'}</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Chuyên mục</span>
+                <span className="text-sm font-bold text-forest">{doc.categoryLabel || '---'}</span>
+              </div>
+              {doc.summary && (
+                <div className="flex flex-col gap-1 md:col-span-2 pt-2 border-t border-slate-100">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tóm tắt văn bản</span>
+                  <p className="m-0 text-sm font-bold text-slate-600 italic leading-relaxed">{doc.summary}</p>
+                </div>
+              )}
+            </div>
             
             {/* Image display */}
             {doc.drive_link && doc.drive_link_type === 'image' ? (
-              <div className="mt-10">
+              <div className="mt-6">
                 <img 
                   src={getDirectImageUrl(doc.drive_link)} 
                   alt="Ảnh đính kèm" 
@@ -115,57 +117,25 @@ export default function ReaderPage({ doc, searchTerm, onBack }) {
                 />
               </div>
             ) : doc.drive_link ? (
-              <div className="mt-8">
+              <div className="mt-10 flex flex-col items-center gap-4 p-8 rounded-3xl bg-forest/5 border-2 border-dashed border-forest/20">
+                <div className="text-4xl">📄</div>
+                <div className="text-center">
+                  <div className="font-bold text-forest mb-1">Văn bản có file PDF đính kèm</div>
+                  <div className="text-xs text-slate-500">Bấm vào nút bên dưới để xem toàn văn trên Google Drive</div>
+                </div>
                 <a href={doc.drive_link} target="_blank" rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2.5 bg-forest text-gold px-6 py-3 rounded-xl text-sm font-bold no-underline transition-all hover:bg-forest/90 hover:shadow-lg hover:shadow-forest/20 active:scale-95">
-                  📄 Xem bản gốc (PDF)
+                  className="inline-flex items-center gap-2.5 bg-forest text-gold px-8 py-4 rounded-2xl font-bold no-underline transition-all hover:bg-forest/90 hover:shadow-xl hover:shadow-forest/20 active:scale-95">
+                  Mở bản gốc (PDF) →
                 </a>
               </div>
-            ) : null}
-          </div>
-
-          <div className="leading-relaxed max-w-3xl mx-auto">
-            {/* Render legacy chapters if they exist */}
-            {doc.content.chapters && doc.content.chapters.map(ch => (
-              <div key={ch.id} id={ch.id} className="chapter-heading mb-12 scroll-mt-24">
-                <h2 className="text-xl md:text-2xl font-black text-forest mb-6 flex items-center gap-3">
-                  <span className="w-2 h-8 bg-gold rounded-full" />
-                  {ch.title}
-                </h2>
-                <div className="flex flex-col gap-8">
-                  {ch.articles.map(art => (
-                    <div key={art.id} id={art.id} className="scroll-mt-24">
-                      <h3 className="text-base md:text-lg font-bold text-slate-800 mb-3 flex items-start gap-2">
-                        {highlightText(art.title)}
-                      </h3>
-                      <p className="m-0 text-justify whitespace-pre-wrap text-slate-800 leading-relaxed font-bold">
-                        {highlightText(art.text)}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-
-            {/* Render unstructured text if it exists */}
-            {doc.content.fullText && (
-              <div className="text-slate-800 whitespace-pre-wrap leading-relaxed font-bold text-justify">
-                {highlightText(doc.content.fullText)}
+            ) : (
+              <div className="mt-10 text-center p-8 text-slate-400 italic text-sm">
+                Không có file đính kèm cho văn bản này.
               </div>
             )}
           </div>
         </div>
       </div>
-
-      {/* Floating ToC Button (Only if chapters exist) */}
-      {doc.content.chapters && (
-        <button
-          onClick={() => setShowToc(!showToc)}
-          className="md:hidden fixed bottom-6 right-6 w-14 h-14 rounded-2xl bg-forest text-gold border-none shadow-xl shadow-forest/20 text-2xl flex items-center justify-center cursor-pointer z-50 hover:scale-105 active:scale-95 transition-all"
-        >
-          📑
-        </button>
-      )}
     </div>
   );
 }

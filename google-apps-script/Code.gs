@@ -13,17 +13,32 @@ function setup() {
   var sheets = ["users", "documents", "activity_logs"];
   var headers = {
     "users": ["id", "username", "password", "full_name", "unit", "role", "lastLogin"],
-    "documents": ["id", "title", "issue_number", "category", "categoryLabel", "summary", "drive_link", "drive_link_type", "content", "updatedAt", "created_at"],
+    "documents": ["id", "title", "issue_number", "doc_date", "issuing_authority", "summary", "category", "categoryLabel", "drive_link", "drive_link_type", "updatedAt", "created_at"],
     "activity_logs": ["id", "timestamp", "username", "action", "details", "created_at"]
   };
 
   sheets.forEach(function(name) {
     var sheet = ss.getSheetByName(name);
     if (!sheet) {
+      // Nếu chưa có sheet thì tạo mới hoàn toàn
       sheet = ss.insertSheet(name);
       sheet.appendRow(headers[name]);
-      // Định dạng header cho đẹp
       sheet.getRange(1, 1, 1, headers[name].length).setFontWeight("bold").setBackground("#e2f0e8");
+    } else {
+      // Nếu đã có sheet, kiểm tra xem có thiếu cột nào không
+      var lastCol = sheet.getLastColumn();
+      var existingHeaders = lastCol > 0 ? sheet.getRange(1, 1, 1, lastCol).getValues()[0] : [];
+      var missingHeaders = headers[name].filter(function(h) {
+        return existingHeaders.indexOf(h) === -1;
+      });
+      
+      if (missingHeaders.length > 0) {
+        // Bổ sung các cột còn thiếu vào cuối
+        sheet.getRange(1, lastCol + 1, 1, missingHeaders.length)
+             .setValues([missingHeaders])
+             .setFontWeight("bold")
+             .setBackground("#fff2cc"); // Màu vàng nhạt cho các cột mới bổ sung
+      }
     }
   });
   
@@ -33,7 +48,7 @@ function setup() {
     userSheet.appendRow(["admin-001", "admin", "admin123", "Quản trị viên", "Hệ thống", "admin", new Date().toISOString()]);
   }
   
-  return "Đã thiết lập xong các bảng!";
+  return "Đã thiết lập và cập nhật cấu trúc các bảng thành công!";
 }
 
 function doGet(e) {

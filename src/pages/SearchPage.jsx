@@ -28,27 +28,16 @@ export default function SearchPage() {
         let docScore = 0;
         const matches = [];
 
-        // Tiêu đề & tóm tắt
+        // Metadata search
         if (fuzzyMatch(doc.title, q)) docScore += 10;
-        if (fuzzyMatch(doc.issue_number, q)) docScore += 5;
+        if (fuzzyMatch(doc.issue_number, q)) docScore += 8;
+        if (fuzzyMatch(doc.issuing_authority, q)) docScore += 5;
         if (fuzzyMatch(doc.summary, q)) docScore += 2;
-
-        // Nội dung
-        doc.content.chapters.forEach(ch => {
-          if (fuzzyMatch(ch.title, q)) docScore += 3;
-          ch.articles.forEach(art => {
-            if (fuzzyMatch(art.title, q) || fuzzyMatch(art.text, q)) {
-              docScore += 1;
-              matches.push({ chTitle: ch.title, artTitle: art.title, text: art.text });
-            }
-          });
-        });
 
         if (docScore > 0) {
           hits.push({
             ...doc,
-            score: docScore,
-            topMatches: matches.slice(0, 3)
+            score: docScore
           });
         }
       });
@@ -133,22 +122,20 @@ export default function SearchPage() {
                     {doc.categoryLabel}
                   </span>
                 </div>
-                <div className="text-[12px] text-slate-700 mb-2 font-bold">{doc.issue_number}</div>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-3">
+                  <div className="text-[12px] text-slate-700 font-bold">{doc.issue_number || 'Chưa có số'}</div>
+                  <div className="text-[12px] text-slate-500 flex items-center gap-1.5 font-bold">
+                    <span className="w-1 h-1 rounded-full bg-slate-300" />
+                    {doc.issuing_authority}
+                  </div>
+                  <div className="text-[12px] text-slate-500 flex items-center gap-1.5 font-bold">
+                    <span className="w-1 h-1 rounded-full bg-slate-300" />
+                    {doc.doc_date ? new Date(doc.doc_date).toLocaleDateString('vi-VN') : '---'}
+                  </div>
+                </div>
                 <p className="m-0 text-[13px] text-slate-800 leading-relaxed mb-4 font-medium">{doc.summary}</p>
                 
-                {doc.topMatches.length > 0 && (
-                  <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-                    <div className="text-[11px] font-bold text-forest mb-2 uppercase tracking-widest">Trích đoạn nổi bật</div>
-                    {doc.topMatches.map((m, idx) => (
-                      <div key={idx} className="mb-2 last:mb-0 pb-2 last:pb-0 border-b last:border-0 border-slate-200/50">
-                        <div className="text-[11px] font-bold text-slate-700 mb-1">{m.artTitle}</div>
-                        <div className="text-[12px] text-slate-500 line-clamp-2 italic leading-relaxed">
-                          "{m.text}"
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                <p className="m-0 text-[13px] text-slate-800 leading-relaxed mb-1 font-medium">{doc.summary}</p>
               </div>
             ))}
           </div>

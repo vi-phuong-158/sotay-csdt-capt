@@ -19,7 +19,7 @@ export default function HomePage({ setActiveNav }) {
   ];
   const stats = [
     { label: 'TỔNG SỐ VĂN BẢN', value: documents.length, icon: '📄', color: 'border-forest', bgColor: 'bg-forest/5' },
-    { label: 'ĐIỀU LUẬT', value: documents.reduce((s, d) => s + d.content.chapters.reduce((cs, c) => cs + c.articles.length, 0), 0), icon: '📒', color: 'border-gold', bgColor: 'bg-gold/5' },
+    { label: 'CÓ FILE ĐÍNH KÈM', value: documents.filter(d => d.drive_link).length, icon: '📎', color: 'border-gold', bgColor: 'bg-gold/5' },
     { label: 'CHUYÊN MỤC', value: 4, icon: '🗂', color: 'border-blue-500', bgColor: 'bg-blue-50' },
     { label: 'CẬP NHẬT MỚI', value: '2026', icon: '⏰', color: 'border-orange-500', bgColor: 'bg-orange-50' },
   ];

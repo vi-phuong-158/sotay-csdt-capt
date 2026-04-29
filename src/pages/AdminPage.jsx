@@ -28,8 +28,15 @@ export default function AdminPage() {
 
   // Add Doc State
   const [showDocModal, setShowDocModal] = useState(false);
-  const [docStep, setDocStep] = useState(1);
-  const [newDoc, setNewDoc] = useState({ title: '', issue_number: '', category: 'hinh-su', summary: '', drive_link: '', rawText: '' });
+  const [newDoc, setNewDoc] = useState({ 
+    title: '', 
+    issue_number: '', 
+    doc_date: '', 
+    issuing_authority: '', 
+    category: 'hinh-su', 
+    summary: '', 
+    drive_link: ''
+  });
   const [selectedFile, setSelectedFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -43,7 +50,7 @@ export default function AdminPage() {
   };
 
   const handleAddDoc = async () => {
-    if (!newDoc.title || !newDoc.rawText) return;
+    if (!newDoc.title) return;
     
     setIsUploading(true);
     let driveUrl = newDoc.drive_link;
@@ -71,24 +78,22 @@ export default function AdminPage() {
       }
     }
 
-    // No more chapter/article splitting. Just store the raw text.
+    // Remove chapter/article splitting. Just store metadata.
     const docObj = {
       title: newDoc.title,
       issue_number: newDoc.issue_number,
+      doc_date: newDoc.doc_date,
+      issuing_authority: newDoc.issuing_authority,
+      summary: newDoc.summary,
       category: newDoc.category,
       categoryLabel: CATEGORIES.find(c => c.value === newDoc.category)?.label || 'Khác',
-      summary: newDoc.summary,
       drive_link: driveUrl,
-      drive_link_type: fileType,
-      content: {
-        fullText: newDoc.rawText
-      }
+      drive_link_type: fileType
     };
 
     await addDocument(docObj);
     setShowDocModal(false);
-    setDocStep(1);
-    setNewDoc({ title: '', issue_number: '', category: 'hinh-su', summary: '', drive_link: '', rawText: '' });
+    setNewDoc({ title: '', issue_number: '', doc_date: '', issuing_authority: '', category: 'hinh-su', summary: '', drive_link: '' });
     setSelectedFile(null);
     setIsUploading(false);
   };
@@ -185,9 +190,9 @@ export default function AdminPage() {
               <table className="w-full text-left text-sm text-slate-600 border-collapse">
                 <thead className="bg-slate-50 text-slate-500 text-[11px] uppercase tracking-wider">
                   <tr>
-                    <th className="p-4 border-b border-slate-100 font-bold">Văn bản</th>
+                    <th className="p-4 border-b border-slate-100 font-bold">Văn bản / Số hiệu</th>
+                    <th className="p-4 border-b border-slate-100 font-bold">Cơ quan / Ngày</th>
                     <th className="p-4 border-b border-slate-100 font-bold">Chuyên mục</th>
-                    <th className="p-4 border-b border-slate-100 font-bold">Cập nhật</th>
                     <th className="p-4 border-b border-slate-100 font-bold text-right">Thao tác</th>
                   </tr>
                 </thead>
@@ -195,8 +200,12 @@ export default function AdminPage() {
                   {documents.map(d => (
                     <tr key={d.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
                       <td className="p-4">
-                        <div className="text-slate-900 font-bold text-[13px]">{d.title}</div>
-                        <div className="text-[11px] text-slate-500">{d.issue_number}</div>
+                        <div className="text-slate-900 font-bold text-[13px] line-clamp-1">{d.title}</div>
+                        <div className="text-[11px] text-slate-500 font-bold">{d.issue_number || 'Chưa có số'}</div>
+                      </td>
+                      <td className="p-4">
+                        <div className="text-slate-800 font-bold text-[12px]">{d.issuing_authority || '---'}</div>
+                        <div className="text-[11px] text-slate-500">{d.doc_date ? new Date(d.doc_date).toLocaleDateString('vi-VN') : '---'}</div>
                       </td>
                       <td className="p-4">
                         <span className="bg-forest/10 text-forest px-2 py-1 rounded text-[10px] font-bold">
@@ -288,51 +297,43 @@ export default function AdminPage() {
       {showDocModal && (
         <Modal title="Thêm văn bản mới" onClose={() => setShowDocModal(false)}>
           <div className="flex flex-col gap-4">
-            {docStep === 1 && (
-              <>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Tên văn bản</label>
-                  <input required value={newDoc.title} onChange={e => setNewDoc({...newDoc, title: e.target.value})} className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 outline-none focus:border-forest/50 focus:bg-white transition-all" />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Số hiệu</label>
-                  <input value={newDoc.issue_number} onChange={e => setNewDoc({...newDoc, issue_number: e.target.value})} className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 outline-none focus:border-forest/50 focus:bg-white transition-all" />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Chuyên mục</label>
-                  <select value={newDoc.category} onChange={e => setNewDoc({...newDoc, category: e.target.value})} className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 outline-none focus:border-forest/50 focus:bg-white transition-all cursor-pointer">
-                    {CATEGORIES.map(c => (
-                      <option key={c.value} value={c.value}>{c.label}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Tải file đính kèm (PDF, Hình ảnh)</label>
-                  <input type="file" accept=".pdf,image/*" onChange={e => setSelectedFile(e.target.files[0])} className="w-full p-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-500 outline-none focus:border-forest/50 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-forest file:text-gold hover:file:bg-forest-dark transition-all" />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Tóm tắt</label>
-                  <textarea rows={3} value={newDoc.summary} onChange={e => setNewDoc({...newDoc, summary: e.target.value})} className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 outline-none focus:border-forest/50 focus:bg-white transition-all resize-y" />
-                </div>
-                <button onClick={() => setDocStep(2)} className="w-full p-4 rounded-xl bg-forest text-white font-bold mt-2 border-none cursor-pointer shadow-lg shadow-forest/20 hover:bg-forest-dark transition-all">Tiếp tục: Nhập nội dung</button>
-              </>
-            )}
-            {docStep === 2 && (
-              <>
-                <div className="text-[11px] font-bold text-forest bg-forest/5 p-3 rounded-xl border border-forest/10 mb-2">
-                  Dán nội dung văn bản vào đây. Hệ thống sẽ hiển thị đúng như định dạng bạn đã dán.
-                </div>
-                <div>
-                  <textarea rows={10} value={newDoc.rawText} onChange={e => setNewDoc({...newDoc, rawText: e.target.value})} placeholder="Điều 1: Phạm vi..." className="w-full p-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 outline-none focus:border-forest/50 focus:bg-white transition-all resize-y font-mono text-xs leading-relaxed" />
-                </div>
-                <div className="flex gap-2 mt-4">
-                  <button onClick={() => setDocStep(1)} className="flex-1 p-4 rounded-xl bg-slate-100 text-slate-600 font-bold border-none cursor-pointer hover:bg-slate-200 transition-all">Quay lại</button>
-                  <button onClick={handleAddDoc} disabled={isUploading} className="flex-[2] p-4 rounded-xl bg-gold text-forest font-bold border-none cursor-pointer disabled:opacity-50 shadow-lg shadow-gold/20 hover:bg-gold/90 transition-all">
-                    {isUploading ? 'Đang xử lý...' : 'Lưu văn bản'}
-                  </button>
-                </div>
-              </>
-            )}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Số văn bản</label>
+                <input value={newDoc.issue_number} onChange={e => setNewDoc({...newDoc, issue_number: e.target.value})} placeholder="Số: 123/2024/..." className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 outline-none focus:border-forest/50 focus:bg-white transition-all" />
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Ngày tháng năm</label>
+                <input type="date" value={newDoc.doc_date} onChange={e => setNewDoc({...newDoc, doc_date: e.target.value})} className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 outline-none focus:border-forest/50 focus:bg-white transition-all" />
+              </div>
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Cơ quan phát hành</label>
+              <input value={newDoc.issuing_authority} onChange={e => setNewDoc({...newDoc, issuing_authority: e.target.value})} placeholder="Ví dụ: Bộ Công an, Chính phủ..." className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 outline-none focus:border-forest/50 focus:bg-white transition-all" />
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Trích yếu văn bản</label>
+              <textarea rows={2} required value={newDoc.title} onChange={e => setNewDoc({...newDoc, title: e.target.value})} placeholder="Tên/trích yếu nội dung văn bản..." className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 outline-none focus:border-forest/50 focus:bg-white transition-all resize-none" />
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Chuyên mục</label>
+              <select value={newDoc.category} onChange={e => setNewDoc({...newDoc, category: e.target.value})} className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 outline-none focus:border-forest/50 focus:bg-white transition-all cursor-pointer">
+                {CATEGORIES.map(c => (
+                  <option key={c.value} value={c.value}>{c.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Tải file đính kèm (PDF, Hình ảnh)</label>
+              <input type="file" accept=".pdf,image/*" onChange={e => setSelectedFile(e.target.files[0])} className="w-full p-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-500 outline-none focus:border-forest/50 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-forest file:text-gold hover:file:bg-forest-dark transition-all" />
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Tóm tắt văn bản</label>
+              <textarea rows={3} value={newDoc.summary} onChange={e => setNewDoc({...newDoc, summary: e.target.value})} placeholder="Tóm tắt ngắn gọn nội dung chính..." className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 outline-none focus:border-forest/50 focus:bg-white transition-all resize-y" />
+            </div>
+            <button onClick={handleAddDoc} disabled={isUploading} className="w-full p-4 rounded-xl bg-gold text-forest font-bold mt-2 border-none cursor-pointer disabled:opacity-50 shadow-lg shadow-gold/20 hover:bg-gold/90 transition-all">
+              {isUploading ? 'Đang xử lý...' : 'Lưu văn bản'}
+            </button>
           </div>
         </Modal>
       )}
