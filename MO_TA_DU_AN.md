@@ -41,7 +41,9 @@ Hệ thống được thiết kế để quản trị dữ liệu thông qua Goo
 
 - **Google NotebookLM**: Công cụ AI phục vụ tra cứu thông minh.
   - Tận dụng khả năng tóm tắt và trả lời câu hỏi dựa trên kho dữ liệu văn bản pháp luật riêng biệt.
-  - Được tích hợp dưới dạng một chuyên mục hỗ trợ người dùng giải đáp các thắc mắc nghiệp vụ phức tạp bằng ngôn ngữ tự nhiên.
+  - Được tích hợp dưới dạng chức năng **Sổ tay AI** trong thanh điều hướng của hệ thống.
+  - Khi người dùng bấm vào **Sổ tay AI**, hệ thống hiển thị hộp thoại xác nhận và mở liên kết Google NotebookLM đã cấu hình sẵn: `https://notebooklm.google.com/notebook/53536c72-fb38-4b28-a622-435079600f14`.
+  - Người dùng có thể đặt câu hỏi bằng ngôn ngữ tự nhiên để tra cứu, tổng hợp và đối chiếu thông tin từ nguồn tài liệu đã nạp vào NotebookLM.
 
 
 ## 3. Các tính năng chính
@@ -108,12 +110,15 @@ Hệ thống được thiết kế để quản trị dữ liệu thông qua Goo
 
 ### Sổ tay AI
 
-- Cung cấp giao diện truy cập nhanh vào trợ lý AI (Google NotebookLM).
-- AI được huấn luyện dựa trên toàn bộ các văn bản pháp luật và hướng dẫn nghiệp vụ có trong hệ thống.
+- Cung cấp giao diện truy cập nhanh vào trợ lý AI sử dụng Google NotebookLM.
+- Chức năng được đặt trong thanh điều hướng với tên **Sổ tay AI**.
+- Khi bấm vào **Sổ tay AI**, hệ thống mở liên kết NotebookLM đã cấu hình để người dùng hỏi đáp với AI.
+- NotebookLM được xây dựng trên bộ tài liệu pháp luật và hướng dẫn nghiệp vụ do đơn vị quản trị nạp vào.
 - Hỗ trợ người dùng:
   - Tóm tắt các văn bản dài.
   - Trả lời các tình huống nghiệp vụ dựa trên quy định pháp luật hiện hành.
   - Tìm kiếm thông tin theo ngữ nghĩa thay vì chỉ tìm theo từ khóa chính xác.
+  - Đối chiếu nhanh nội dung giữa nhiều tài liệu trong cùng một sổ tay NotebookLM.
 
 
 ## 4. Các giải pháp bảo mật đã triển khai

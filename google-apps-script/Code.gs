@@ -63,7 +63,18 @@ function setup() {
   });
 
   var userSheet = ss.getSheetByName("users");
+  formatPlainTextColumns(userSheet, ["id", "username", "password"]);
   if (userSheet.getLastRow() < 2) {
+    appendObjectRow(userSheet, {
+      id: "admin-001",
+      username: "admin",
+      password: "admin123",
+      full_name: "Quáº£n trá»‹ viÃªn",
+      unit: "Há»‡ thá»‘ng",
+      role: "admin",
+      lastLogin: new Date().toISOString(),
+    });
+    /*
     userSheet.appendRow([
       "admin-001",
       "admin",
@@ -73,6 +84,7 @@ function setup() {
       "admin",
       new Date().toISOString(),
     ]);
+    */
   }
 
   return "Đã thiết lập và cập nhật cấu trúc các bảng thành công!";
@@ -162,7 +174,7 @@ function doPost(e) {
       var users = getSheetDataAsObjects(userSheet);
 
       var user = users.find(function (u) {
-        return u.username === username && u.password === password;
+        return String(u.username) === String(username) && String(u.password) === String(password);
       });
 
       if (user) {
@@ -226,7 +238,7 @@ function doPost(e) {
         SpreadsheetApp.getActiveSpreadsheet().getSheetByName("users");
       var users = getSheetDataAsObjects(userSheet);
       var user = users.find(function (u) {
-        return u.username === usernameFromToken && u.password === oldPass;
+        return String(u.username) === String(usernameFromToken) && String(u.password) === String(oldPass);
       });
 
       if (!user) {
@@ -240,7 +252,10 @@ function doPost(e) {
       var headers = getHeaders(userSheet);
       var passIdx = headers.indexOf("password");
       if (passIdx !== -1) {
-        userSheet.getRange(rowIndex, passIdx + 1).setValue(newPass);
+        userSheet
+          .getRange(rowIndex, passIdx + 1)
+          .setNumberFormat("@")
+          .setValue(String(newPass));
         return responseJson({ success: true }, 200);
       }
       return responseJson({ error: "Cột mật khẩu không tìm thấy" }, 500);
@@ -302,15 +317,7 @@ function doPost(e) {
         sheet.appendRow(headers);
       }
 
-      var rowData = headers.map(function (h) {
-        var val = rowObj[h];
-        if (typeof val === "object" && val !== null) {
-          return JSON.stringify(val);
-        }
-        return val === undefined ? "" : val;
-      });
-
-      sheet.appendRow(rowData);
+      appendObjectRow(sheet, rowObj, headers);
       return responseJson({ success: true }, 200);
     }
 
@@ -331,7 +338,12 @@ function doPost(e) {
           var val = updates[key];
           if (typeof val === "object" && val !== null)
             val = JSON.stringify(val);
-          sheet.getRange(rowIndex, colIndex + 1).setValue(val);
+          var cell = sheet.getRange(rowIndex, colIndex + 1);
+          if (shouldWriteAsPlainText(sheet.getName(), key)) {
+            cell.setNumberFormat("@").setValue(String(val === undefined ? "" : val));
+          } else {
+            cell.setValue(val);
+          }
         }
       }
       return responseJson({ success: true }, 200);
@@ -389,6 +401,9 @@ function getSheetDataAsObjects(sheet) {
           val = JSON.parse(val);
         } catch (e) {}
       }
+      if (shouldWriteAsPlainText(sheet.getName(), headers[j])) {
+        val = val === null || val === undefined ? "" : String(val);
+      }
       obj[headers[j]] = val;
     }
     result.push(obj);
@@ -407,9 +422,59 @@ function findRowIndexById(sheet, id) {
 
   var idValues = sheet.getRange(2, idColIndex + 1, lastRow - 1, 1).getValues();
   for (var i = 0; i < idValues.length; i++) {
-    if (idValues[i][0] === id) {
+    if (String(idValues[i][0]) === String(id)) {
       return i + 2;
     }
   }
   return -1;
+}
+
+function appendObjectRow(sheet, rowObj, headers) {
+  headers = headers || getHeaders(sheet);
+
+  if (headers.length === 0) {
+    headers = Object.keys(rowObj);
+    sheet.appendRow(headers);
+  }
+
+  var rowData = headers.map(function (h) {
+    var val = rowObj[h];
+    if (typeof val === "object" && val !== null) {
+      return JSON.stringify(val);
+    }
+    if (shouldWriteAsPlainText(sheet.getName(), h)) {
+      return val === undefined || val === null ? "" : String(val);
+    }
+    return val === undefined ? "" : val;
+  });
+
+  var nextRow = sheet.getLastRow() + 1;
+  var range = sheet.getRange(nextRow, 1, 1, rowData.length);
+  formatPlainTextColumns(sheet, headers.filter(function (h) {
+    return shouldWriteAsPlainText(sheet.getName(), h);
+  }), nextRow, 1);
+  range.setValues([rowData]);
+}
+
+function shouldWriteAsPlainText(sheetName, header) {
+  return (
+    sheetName === "users" &&
+    ["id", "username", "password"].indexOf(header) !== -1
+  );
+}
+
+function formatPlainTextColumns(sheet, headersToFormat, startRow, numRows) {
+  if (!sheet || !headersToFormat || headersToFormat.length === 0) return;
+
+  var headers = getHeaders(sheet);
+  if (headers.length === 0) return;
+
+  var row = startRow || 2;
+  var rows = numRows || Math.max(sheet.getMaxRows() - row + 1, 1);
+  headersToFormat.forEach(function (header) {
+    var colIndex = headers.indexOf(header);
+    if (colIndex !== -1) {
+      sheet.getRange(row, colIndex + 1, rows, 1).setNumberFormat("@");
+    }
+  });
 }

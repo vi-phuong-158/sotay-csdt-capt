@@ -145,10 +145,13 @@ export default function AdminPage() {
   });
   const [selectedFile, setSelectedFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isAddingUser, setIsAddingUser] = useState(false);
 
   const handleAddUser = async (e) => {
     e.preventDefault();
-    if (!newUser.username || !newUser.password || !newUser.full_name) return;
+    if (!newUser.username || !newUser.password || !newUser.full_name || isAddingUser) return;
+    
+    setIsAddingUser(true);
     try {
       const added = await addUser(newUser);
       if (added) {
@@ -158,6 +161,8 @@ export default function AdminPage() {
       }
     } catch (err) {
       // Error handled by showToast in AppContext
+    } finally {
+      setIsAddingUser(false);
     }
   };
 
@@ -682,9 +687,17 @@ export default function AdminPage() {
             </div>
             <button
               type="submit"
-              className="w-full p-4 rounded-xl bg-gold text-forest font-bold mt-2 border-none cursor-pointer shadow-lg shadow-gold/20 hover:bg-gold/90 transition-all"
+              disabled={isAddingUser}
+              className={`w-full p-4 rounded-xl font-bold mt-2 border-none cursor-pointer shadow-lg transition-all flex items-center justify-center gap-2
+                ${isAddingUser ? "bg-slate-100 text-slate-400 cursor-not-allowed" : "bg-gold text-forest shadow-gold/20 hover:bg-gold/90"}`}
             >
-              Lưu tài khoản
+              {isAddingUser ? (
+                <>
+                  <span className="animate-spin text-lg">⏳</span> Đang lưu...
+                </>
+              ) : (
+                "Lưu tài khoản"
+              )}
             </button>
           </form>
         </Modal>
