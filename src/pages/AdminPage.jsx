@@ -1,6 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useApp } from "../context/AppContext";
-import { formatDate, formatDateTime, validateFileHeader } from "../lib/utils";
+import {
+  formatDate,
+  formatDateTime,
+  removeVietnameseDiacritics,
+  validateFileHeader,
+} from "../lib/utils";
 import { uploadFile, postAPI } from "../lib/api";
 import Modal from "../components/Modal";
 import ReaderPage from "./ReaderPage";
@@ -19,22 +24,99 @@ export default function AdminPage() {
   } = useApp();
 
   const [users, setUsers] = useState([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+  const [usersError, setUsersError] = useState("");
+  const [userSearch, setUserSearch] = useState("");
+  const [logPage, setLogPage] = useState(1);
   const [tab, setTab] = useState("users");
   const [activeDoc, setActiveDoc] = useState(null);
+  const logPageSize = 25;
 
   useEffect(() => {
-    if (currentUser?.role === "admin" && token) {
-      const loadUsers = async () => {
-        try {
-          const res = await postAPI({ action: "admin_get_users", token });
-          if (res.success) setUsers(res.rows);
-        } catch (e) {
-          console.error("Failed to load users", e);
-        }
-      };
-      loadUsers();
+    let cancelled = false;
+
+    if (currentUser?.role !== "admin") {
+      setUsers([]);
+      return undefined;
     }
-  }, [currentUser, token]);
+
+    if (!token) {
+      setUsersError("Chưa có phiên đăng nhập hợp lệ để tải danh sách tài khoản.");
+      return undefined;
+    }
+
+    const loadUsers = async () => {
+      setIsLoadingUsers(true);
+      setUsersError("");
+      try {
+        const res = await postAPI({ action: "admin_get_users", token });
+        if (cancelled) return;
+        if (res.success) {
+          setUsers(res.rows || []);
+        } else {
+          setUsersError(res.error || "Không tải được danh sách tài khoản.");
+        }
+      } catch (e) {
+        if (!cancelled) {
+          console.error("Failed to load users", e);
+          setUsersError(e.message || "Không tải được danh sách tài khoản.");
+        }
+      } finally {
+        if (!cancelled) setIsLoadingUsers(false);
+      }
+    };
+
+    loadUsers();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentUser?.role, token]);
+
+  const usersByUsername = useMemo(() => {
+    return new Map(users.map((u) => [u.username, u]));
+  }, [users]);
+
+  const enrichedLogs = useMemo(() => {
+    return logs.map((log) => {
+      const matchedUser = usersByUsername.get(log.username);
+      return {
+        ...log,
+        full_name: log.full_name || matchedUser?.full_name || "",
+        unit: log.unit || matchedUser?.unit || "",
+      };
+    });
+  }, [logs, usersByUsername]);
+
+  const filteredUsers = useMemo(() => {
+    const query = removeVietnameseDiacritics(userSearch.trim().toLowerCase());
+    if (!query) return users;
+
+    return users.filter((u) => {
+      const searchable = removeVietnameseDiacritics(
+        [u.username, u.full_name, u.unit, u.role].filter(Boolean).join(" ").toLowerCase(),
+      );
+      return searchable.includes(query);
+    });
+  }, [users, userSearch]);
+
+  const sortedLogs = useMemo(() => {
+    return [...enrichedLogs].sort((a, b) => {
+      const timeA = new Date(a.created_at || a.timestamp || 0).getTime();
+      const timeB = new Date(b.created_at || b.timestamp || 0).getTime();
+      return timeB - timeA;
+    });
+  }, [enrichedLogs]);
+
+  const totalLogPages = Math.max(1, Math.ceil(sortedLogs.length / logPageSize));
+  const pagedLogs = useMemo(() => {
+    const start = (logPage - 1) * logPageSize;
+    return sortedLogs.slice(start, start + logPageSize);
+  }, [sortedLogs, logPage, logPageSize]);
+
+  useEffect(() => {
+    setLogPage((page) => Math.min(page, totalLogPages));
+  }, [totalLogPages]);
 
   const CATEGORIES = [
     { value: "hinh-su", label: "Hình sự" },
@@ -50,16 +132,6 @@ export default function AdminPage() {
     unit: "",
     password: "",
   });
-
-  if (activeDoc) {
-    return (
-      <ReaderPage
-        doc={activeDoc}
-        searchTerm=""
-        onBack={() => setActiveDoc(null)}
-      />
-    );
-  }
 
   const [showDocModal, setShowDocModal] = useState(false);
   const [newDoc, setNewDoc] = useState({
@@ -77,9 +149,16 @@ export default function AdminPage() {
   const handleAddUser = async (e) => {
     e.preventDefault();
     if (!newUser.username || !newUser.password || !newUser.full_name) return;
-    await addUser(newUser);
-    setShowUserModal(false);
-    setNewUser({ username: "", full_name: "", unit: "", password: "" });
+    try {
+      const added = await addUser(newUser);
+      if (added) {
+        setUsers((prev) => [...prev, added]);
+        setShowUserModal(false);
+        setNewUser({ username: "", full_name: "", unit: "", password: "" });
+      }
+    } catch (err) {
+      // Error handled by showToast in AppContext
+    }
   };
 
   const handleAddDoc = async () => {
@@ -99,7 +178,7 @@ export default function AdminPage() {
       fileType = validation.type;
 
       try {
-        const uploadRes = await uploadFile(selectedFile);
+        const uploadRes = await uploadFile(selectedFile, token);
         if (uploadRes.success && uploadRes.url) {
           driveUrl = uploadRes.url;
         }
@@ -139,6 +218,16 @@ export default function AdminPage() {
     setIsUploading(false);
   };
 
+  if (activeDoc) {
+    return (
+      <ReaderPage
+        doc={activeDoc}
+        searchTerm=""
+        onBack={() => setActiveDoc(null)}
+      />
+    );
+  }
+
   if (currentUser?.role !== "admin") {
     return (
       <div className="p-8 text-center text-red-400">
@@ -165,7 +254,7 @@ export default function AdminPage() {
           {[
             { id: "users", label: `Tài khoản (${users.length})`, icon: "👥" },
             { id: "docs", label: `Văn bản (${documents.length})`, icon: "📚" },
-            { id: "logs", label: `Nhật ký (${logs.length})`, icon: "📋" },
+            { id: "logs", label: `Nhật ký (${sortedLogs.length})`, icon: "📋" },
           ].map((t) => (
             <button
               key={t.id}
@@ -181,17 +270,44 @@ export default function AdminPage() {
         {}
         {tab === "users" && (
           <div>
-            <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-white">
-              <h3 className="text-slate-800 text-sm font-bold m-0">
-                Danh sách tài khoản
-              </h3>
+            <div className="p-4 border-b border-slate-100 flex flex-col gap-3 bg-white md:flex-row md:items-center md:justify-between">
+              <div>
+                <h3 className="text-slate-800 text-sm font-bold m-0">
+                  Danh sách tài khoản
+                </h3>
+                <div className="mt-1 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                  Hiển thị {filteredUsers.length}/{users.length} tài khoản
+                </div>
+              </div>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <input
+                  value={userSearch}
+                  onChange={(e) => setUserSearch(e.target.value)}
+                  placeholder="Tìm username, họ tên, đơn vị..."
+                  className="min-w-[240px] rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 outline-none transition-all focus:border-forest/50 focus:bg-white"
+                />
               <button
                 onClick={() => setShowUserModal(true)}
                 className="bg-gold text-forest border-none px-4 py-2 rounded-lg font-bold text-xs cursor-pointer shadow-sm hover:shadow-md transition-all"
               >
                 + Cấp tài khoản mới
               </button>
+              </div>
             </div>
+            {(isLoadingUsers || usersError || users.length === 0) && (
+              <div
+                className={`mx-4 mt-4 rounded-xl border p-3 text-xs font-bold ${
+                  usersError
+                    ? "border-red-100 bg-red-50 text-red-600"
+                    : "border-slate-100 bg-slate-50 text-slate-500"
+                }`}
+              >
+                {usersError ||
+                  (isLoadingUsers
+                    ? "Đang tải danh sách tài khoản từ Google Sheets..."
+                    : "Chưa có tài khoản nào được trả về từ Google Sheets.")}
+              </div>
+            )}
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm text-slate-600 border-collapse">
                 <thead className="bg-slate-50 text-slate-500 text-[11px] uppercase tracking-wider">
@@ -211,9 +327,9 @@ export default function AdminPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white">
-                  {users.map((u) => (
+                  {filteredUsers.map((u) => (
                     <tr
-                      key={u.id}
+                      key={u.id || u.username}
                       className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors"
                     >
                       <td className="p-4 font-bold text-slate-900">
@@ -245,10 +361,14 @@ export default function AdminPage() {
                                 Reset Pass
                               </button>
                               <button
-                                onClick={() => {
-                                  if (window.confirm("Xóa tài khoản này?"))
-                                    deleteUser(u.id);
-                                }}
+                                  onClick={async () => {
+                                    if (window.confirm("Xóa tài khoản này?")) {
+                                      await deleteUser(u.id);
+                                      setUsers((prev) =>
+                                        prev.filter((user) => user.id !== u.id),
+                                      );
+                                    }
+                                  }}
                                 className="bg-red-50 text-red-600 border border-red-100 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer hover:bg-red-100 transition-colors"
                               >
                                 Xóa
@@ -259,6 +379,16 @@ export default function AdminPage() {
                       </td>
                     </tr>
                   ))}
+                  {filteredUsers.length === 0 && (
+                    <tr>
+                      <td
+                        colSpan={4}
+                        className="p-8 text-center text-sm font-bold text-slate-400"
+                      >
+                        Không tìm thấy tài khoản phù hợp.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -359,10 +489,33 @@ export default function AdminPage() {
         {}
         {tab === "logs" && (
           <div>
-            <div className="p-4 border-b border-slate-100 bg-white">
-              <h3 className="text-slate-800 text-sm font-bold m-0">
-                Nhật ký hoạt động (Audit Trail)
-              </h3>
+            <div className="p-4 border-b border-slate-100 bg-white flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h3 className="text-slate-800 text-sm font-bold m-0">
+                  Nhật ký hoạt động (Audit Trail)
+                </h3>
+                <div className="mt-1 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                  Mới nhất trước · Trang {logPage}/{totalLogPages} · {sortedLogs.length} hoạt động
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setLogPage((page) => Math.max(1, page - 1))}
+                  disabled={logPage === 1}
+                  className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Trước
+                </button>
+                <button
+                  onClick={() =>
+                    setLogPage((page) => Math.min(totalLogPages, page + 1))
+                  }
+                  disabled={logPage === totalLogPages}
+                  className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Sau
+                </button>
+              </div>
             </div>
             <div className="overflow-x-auto max-h-[500px]">
               <table className="w-full text-left text-sm text-slate-600 border-collapse">
@@ -383,13 +536,13 @@ export default function AdminPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white">
-                  {logs.map((l) => (
+                  {pagedLogs.map((l, index) => (
                     <tr
-                      key={l.id}
+                      key={l.id || `${l.username}-${l.action}-${l.timestamp || l.created_at}-${index}`}
                       className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors"
                     >
                       <td className="p-4 text-[11px] text-slate-400">
-                        {formatDateTime(l.created_at)}
+                        {formatDateTime(l.created_at || l.timestamp)}
                       </td>
                       <td className="p-4">
                         <div className="text-slate-900 font-bold text-[13px]">
@@ -398,6 +551,11 @@ export default function AdminPage() {
                         <div className="text-[10px] text-slate-500">
                           {l.full_name}
                         </div>
+                        {l.unit && (
+                          <div className="text-[10px] text-slate-400">
+                            {l.unit}
+                          </div>
+                        )}
                       </td>
                       <td className="p-4">
                         <span
@@ -421,9 +579,44 @@ export default function AdminPage() {
                       </td>
                     </tr>
                   ))}
+                  {pagedLogs.length === 0 && (
+                    <tr>
+                      <td
+                        colSpan={4}
+                        className="p-8 text-center text-sm font-bold text-slate-400"
+                      >
+                        Chưa có nhật ký hoạt động.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
+            {sortedLogs.length > logPageSize && (
+              <div className="flex flex-col gap-2 border-t border-slate-100 bg-slate-50 p-4 text-xs font-bold text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+                <span>
+                  Hiển thị {(logPage - 1) * logPageSize + 1}-
+                  {Math.min(logPage * logPageSize, sortedLogs.length)} trong{" "}
+                  {sortedLogs.length} hoạt động
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setLogPage(1)}
+                    disabled={logPage === 1}
+                    className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Đầu
+                  </button>
+                  <button
+                    onClick={() => setLogPage(totalLogPages)}
+                    disabled={logPage === totalLogPages}
+                    className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Cuối
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

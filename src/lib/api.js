@@ -46,6 +46,10 @@ export async function login(username, password) {
   return postAPI({ action: "login", username, password });
 }
 
+export async function changePassword(oldPassword, newPassword, token) {
+  return postAPI({ action: "change_password", oldPassword, newPassword, token });
+}
+
 export async function fetchSheet(sheetName) {
   if (DEMO_MODE) {
     const { MOCK_USERS, MOCK_DOCUMENTS, MOCK_LOGS } =
@@ -91,10 +95,12 @@ export async function deleteRow(sheetName, id, token) {
 
 export async function logActivity(username, action, details, token) {
   const row = {
+    id: "log-" + Date.now() + "-" + Math.floor(Math.random() * 1000),
     timestamp: new Date().toISOString(),
     username,
     action,
     details,
+    created_at: new Date().toISOString(),
   };
   return appendRow("activity_logs", row, token);
 }

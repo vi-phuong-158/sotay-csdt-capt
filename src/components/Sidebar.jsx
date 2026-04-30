@@ -13,8 +13,12 @@ export default function Sidebar({
   open,
   onClose,
 }) {
-  const { newDocsCount } = useApp();
+  const { newDocsCount, changePassword } = useApp();
   const [showAIModal, setShowAIModal] = useState(false);
+  const [showPassModal, setShowPassModal] = useState(false);
+  const [passForm, setPassForm] = useState({ old: "", new: "", confirm: "" });
+  const [passError, setPassError] = useState("");
+  const [isChanging, setIsChanging] = useState(false);
   const navItems = [
     { id: "home", icon: "🏠", label: "Trang chủ" },
     { id: "search", icon: "🔍", label: "Tra cứu văn bản" },
@@ -116,7 +120,23 @@ export default function Sidebar({
           })}
 
           {}
-          <div className="my-2 border-t border-slate-100" />
+          <button
+            onClick={() => {
+              setShowPassModal(true);
+              onClose();
+            }}
+            className="flex items-center gap-3 p-[11px_14px] rounded-lg transition-all border-none w-full text-left cursor-pointer"
+            style={{
+              borderLeft: "4px solid transparent",
+              fontSize: 14,
+              fontWeight: 600,
+              color: "#1e293b",
+              background: "transparent",
+            }}
+          >
+            <span className="text-lg w-[22px] text-center">🔑</span>
+            <span className="flex-1">Đổi mật khẩu</span>
+          </button>
 
           {}
           <button
@@ -185,6 +205,88 @@ export default function Sidebar({
               </a>
             </div>
           </div>
+        </Modal>
+      )}
+
+      {showPassModal && (
+        <Modal title="🔑 Đổi mật khẩu" onClose={() => setShowPassModal(false)}>
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              setPassError("");
+              if (passForm.new !== passForm.confirm) {
+                setPassError("Mật khẩu mới không khớp");
+                return;
+              }
+              if (passForm.new.length < 6) {
+                setPassError("Mật khẩu mới phải ít nhất 6 ký tự");
+                return;
+              }
+              setIsChanging(true);
+              const res = await changePassword(passForm.old, passForm.new);
+              setIsChanging(false);
+              if (res.success) {
+                setShowPassModal(false);
+                setPassForm({ old: "", new: "", confirm: "" });
+              } else {
+                setPassError(res.error);
+              }
+            }}
+            className="flex flex-col gap-4"
+          >
+            <div>
+              <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1.5">
+                Mật khẩu cũ
+              </label>
+              <input
+                type="password"
+                required
+                value={passForm.old}
+                onChange={(e) =>
+                  setPassForm({ ...passForm, old: e.target.value })
+                }
+                className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:border-forest/50 focus:bg-white transition-all"
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1.5">
+                Mật khẩu mới
+              </label>
+              <input
+                type="password"
+                required
+                value={passForm.new}
+                onChange={(e) =>
+                  setPassForm({ ...passForm, new: e.target.value })
+                }
+                className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:border-forest/50 focus:bg-white transition-all"
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1.5">
+                Xác nhận mật khẩu mới
+              </label>
+              <input
+                type="password"
+                required
+                value={passForm.confirm}
+                onChange={(e) =>
+                  setPassForm({ ...passForm, confirm: e.target.value })
+                }
+                className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:border-forest/50 focus:bg-white transition-all"
+              />
+            </div>
+            {passError && (
+              <div className="text-red-500 text-xs font-bold">{passError}</div>
+            )}
+            <button
+              type="submit"
+              disabled={isChanging}
+              className="w-full p-4 rounded-xl bg-gold text-forest font-bold border-none cursor-pointer hover:bg-gold/90 transition-all shadow-lg shadow-gold/10 disabled:opacity-50"
+            >
+              {isChanging ? "Đang xử lý..." : "Cập nhật mật khẩu"}
+            </button>
+          </form>
         </Modal>
       )}
     </>

@@ -13,6 +13,7 @@ import {
   updateRow,
   deleteRow,
   logActivity as apiLogActivity,
+  changePassword as apiChangePassword,
 } from "../lib/api";
 
 const AppContext = createContext(null);
@@ -62,20 +63,23 @@ export function AppProvider({ children }) {
   }, []);
 
   const logActivity = useCallback(
-    (userId, action, details) => {
-      const username = user?.username || "Guest";
+    (userId, action, details, customToken, actorUser) => {
+      const logUser = actorUser || user || {};
+      const username = logUser.username || "Guest";
+      const createdAt = new Date().toISOString();
       const entry = {
         id: "log-" + Date.now() + "-" + Math.floor(Math.random() * 1000),
         user_id: userId,
         username,
-        full_name: user?.full_name || "",
+        full_name: logUser.full_name || "",
         action,
         details,
-        created_at: new Date().toISOString(),
+        timestamp: createdAt,
+        created_at: createdAt,
       };
       setLogs((prev) => [entry, ...prev]);
-      apiLogActivity(username, action, details, token).catch((e) =>
-        console.error("Log error", e),
+      apiLogActivity(username, action, details, customToken || token).catch(
+        (e) => console.error("Log error", e),
       );
     },
     [user, token],
@@ -107,7 +111,13 @@ export function AppProvider({ children }) {
           localStorage.setItem("plnd_session", JSON.stringify(userData));
           localStorage.setItem("plnd_token", userToken);
 
-          logActivity(userData.id, "LOGIN", "Đăng nhập thành công");
+          logActivity(
+            userData.id,
+            "LOGIN",
+            "Đăng nhập thành công",
+            userToken,
+            userData,
+          );
           showToast(`Chào mừng, ${userData.full_name}!`, "success");
           return { success: true };
         } else {
@@ -130,30 +140,56 @@ export function AppProvider({ children }) {
 
   const addUser = useCallback(
     async (data) => {
-      const newUser = {
-        id: "u-" + Date.now(),
-        ...data,
-        role: "user",
-      };
-      showToast(`Đã thêm tài khoản ${data.username}`, "success");
-      await appendRow("users", newUser, token);
-      return newUser;
+      try {
+        const newUser = {
+          id: "u-" + Date.now(),
+          ...data,
+          role: "user",
+        };
+        const result = await appendRow("users", newUser, token);
+        if (result.success) {
+          showToast(`Đã thêm tài khoản ${data.username}`, "success");
+          // Re-fetch users list might be needed, but for now we just return
+          return newUser;
+        } else {
+          throw new Error(result.error || "Lỗi khi tạo tài khoản");
+        }
+      } catch (error) {
+        showToast(error.message, "error");
+        throw error;
+      }
     },
     [showToast, token],
   );
 
   const deleteUserAction = useCallback(
     async (id) => {
-      showToast("Đã xóa tài khoản.", "success");
-      await deleteRow("users", id, token);
+      try {
+        const result = await deleteRow("users", id, token);
+        if (result.success) {
+          showToast("Đã xóa tài khoản.", "success");
+        } else {
+          throw new Error(result.error || "Lỗi khi xóa tài khoản");
+        }
+      } catch (error) {
+        showToast(error.message, "error");
+      }
     },
     [showToast, token],
   );
 
   const resetPassword = useCallback(
     async (id, newPass) => {
-      showToast("Đã đặt lại mật khẩu.", "success");
-      await updateRow("users", id, { password: newPass }, token);
+      try {
+        const result = await updateRow("users", id, { password: newPass }, token);
+        if (result.success) {
+          showToast("Đã đặt lại mật khẩu.", "success");
+        } else {
+          throw new Error(result.error || "Lỗi khi đặt lại mật khẩu");
+        }
+      } catch (error) {
+        showToast(error.message, "error");
+      }
     },
     [showToast, token],
   );
@@ -187,17 +223,43 @@ export function AppProvider({ children }) {
 
   const deleteDocumentAction = useCallback(
     async (id) => {
-      setDocuments((prev) => prev.filter((d) => d.id !== id));
-      showToast("Đã xóa văn bản.", "success");
-      await deleteRow("documents", id, token);
+      try {
+        const result = await deleteRow("documents", id, token);
+        if (result.success) {
+          setDocuments((prev) => prev.filter((d) => d.id !== id));
+          showToast("Đã xóa văn bản.", "success");
+        } else {
+          throw new Error(result.error || "Lỗi khi xóa văn bản");
+        }
+      } catch (error) {
+        showToast(error.message, "error");
+      }
     },
     [showToast, token],
+  );
+
+  const changePassword = useCallback(
+    async (oldPass, newPass) => {
+      try {
+        const result = await apiChangePassword(oldPass, newPass, token);
+        if (result.success) {
+          showToast("Đã đổi mật khẩu thành công.", "success");
+          return { success: true };
+        } else {
+          return { error: result.error || "Lỗi khi đổi mật khẩu" };
+        }
+      } catch (error) {
+        return { error: "Lỗi kết nối máy chủ." };
+      }
+    },
+    [token, showToast],
   );
 
   return (
     <AppContext.Provider
       value={{
         user,
+        token,
         loading,
         login,
         logout,
@@ -212,6 +274,7 @@ export function AppProvider({ children }) {
         showToast,
         addDocument,
         deleteDocument: deleteDocumentAction,
+        changePassword,
       }}
     >
       {children}

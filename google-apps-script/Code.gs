@@ -79,6 +79,7 @@ function setup() {
 }
 
 var SECRET_KEY = "CSDT_CAPT_SECRET";
+var UPLOAD_FOLDER_ID = "1wk_kBZtz9Fq6XqWDpcnI1QoFbMWaY5yv";
 
 function doGet(e) {
   try {
@@ -110,24 +111,33 @@ function doGet(e) {
 }
 
 function validateToken(token) {
-  if (!token) return false;
+  if (!token) return null;
   try {
-    var decoded = Utilities.newString(Utilities.base64Decode(token));
+    token = String(token).trim();
+    var decodedBytes;
+    try {
+      decodedBytes = Utilities.base64DecodeWebSafe(token);
+    } catch (webSafeError) {
+      decodedBytes = Utilities.base64Decode(token);
+    }
+    var decoded = Utilities.newBlob(decodedBytes).getDataAsString("UTF-8");
     var parts = decoded.split(":");
-    if (parts.length !== 3) return false;
+
+    if (parts.length < 3) return null;
 
     var username = parts[0];
     var timestamp = parts[1];
-    var key = parts[2];
+    var key = parts.slice(2).join(":");
 
-    if (key !== SECRET_KEY) return false;
+    if (key !== SECRET_KEY) return null;
 
     var now = new Date().getTime();
-    if (now - parseInt(timestamp) > 24 * 60 * 60 * 1000) return false;
+    if (now - parseInt(timestamp) > 24 * 60 * 60 * 1000) return null;
 
-    return true;
+    return username;
   } catch (e) {
-    return false;
+    console.error("Token validation error: " + e.toString());
+    return null;
   }
 }
 
@@ -158,7 +168,9 @@ function doPost(e) {
       if (user) {
         var timestamp = new Date().getTime();
         var rawToken = username + ":" + timestamp + ":" + SECRET_KEY;
-        var token = Utilities.base64Encode(rawToken);
+        var token = Utilities.base64EncodeWebSafe(
+          Utilities.newBlob(rawToken).getBytes(),
+        );
 
         var rowIndex = findRowIndexById(userSheet, user.id);
         var headers = getHeaders(userSheet);
@@ -191,7 +203,8 @@ function doPost(e) {
       }
     }
 
-    if (!validateToken(body.token)) {
+    var usernameFromToken = validateToken(body.token);
+    if (!usernameFromToken) {
       return responseJson(
         {
           error:
@@ -199,6 +212,38 @@ function doPost(e) {
         },
         403,
       );
+    }
+
+    if (action === "change_password") {
+      var oldPass = body.oldPassword;
+      var newPass = body.newPassword;
+
+      if (!oldPass || !newPass) {
+        return responseJson({ error: "Thiếu thông tin mật khẩu" }, 400);
+      }
+
+      var userSheet =
+        SpreadsheetApp.getActiveSpreadsheet().getSheetByName("users");
+      var users = getSheetDataAsObjects(userSheet);
+      var user = users.find(function (u) {
+        return u.username === usernameFromToken && u.password === oldPass;
+      });
+
+      if (!user) {
+        return responseJson(
+          { success: false, error: "Mật khẩu cũ không chính xác" },
+          401,
+        );
+      }
+
+      var rowIndex = findRowIndexById(userSheet, user.id);
+      var headers = getHeaders(userSheet);
+      var passIdx = headers.indexOf("password");
+      if (passIdx !== -1) {
+        userSheet.getRange(rowIndex, passIdx + 1).setValue(newPass);
+        return responseJson({ success: true }, 200);
+      }
+      return responseJson({ error: "Cột mật khẩu không tìm thấy" }, 500);
     }
 
     if (action === "admin_get_users") {
@@ -226,7 +271,8 @@ function doPost(e) {
         fileName,
       );
 
-      var file = DriveApp.createFile(blob);
+      var uploadFolder = DriveApp.getFolderById(UPLOAD_FOLDER_ID);
+      var file = uploadFolder.createFile(blob);
       file.setSharing(
         DriveApp.Access.ANYONE_WITH_LINK,
         DriveApp.Permission.VIEW,
