@@ -74,11 +74,11 @@ export function AppProvider({ children }) {
         created_at: new Date().toISOString(),
       };
       setLogs((prev) => [entry, ...prev]);
-      apiLogActivity(username, action, details).catch((e) =>
+      apiLogActivity(username, action, details, token).catch((e) =>
         console.error("Log error", e),
       );
     },
-    [user],
+    [user, token],
   );
 
   const clearNewDocs = useCallback(() => setNewDocsCount(0), []);

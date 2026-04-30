@@ -89,14 +89,14 @@ export async function deleteRow(sheetName, id, token) {
   return postAPI({ action: "delete", sheet: sheetName, id, token });
 }
 
-export async function logActivity(username, action, details) {
+export async function logActivity(username, action, details, token) {
   const row = {
     timestamp: new Date().toISOString(),
     username,
     action,
     details,
   };
-  return appendRow("activity_logs", row);
+  return appendRow("activity_logs", row, token);
 }
 
 export async function uploadFile(file, token) {

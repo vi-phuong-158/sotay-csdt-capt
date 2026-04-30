@@ -94,7 +94,7 @@ export default function HomePage({ setActiveNav }) {
         <div className="absolute right-0 top-0 w-64 h-64 bg-slate-50 rounded-full -translate-y-1/2 translate-x-1/3 z-0" />
         <div className="relative z-10">
           <h1 className="text-3xl font-extrabold text-forest m-0 mb-3 tracking-tight">
-            Chào, {user?.full_name?.split(" ").slice(-2).join(" ")}
+            Chào, {user?.full_name || user?.username}
           </h1>
           <p className="text-slate-600 text-base m-0 mb-8 max-w-md leading-relaxed font-bold">
             Cổng thông tin tra cứu văn bản quy phạm pháp luật nội bộ.
