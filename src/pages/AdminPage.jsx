@@ -28,7 +28,7 @@ export default function AdminPage() {
   const [usersError, setUsersError] = useState("");
   const [userSearch, setUserSearch] = useState("");
   const [logPage, setLogPage] = useState(1);
-  const [tab, setTab] = useState("users");
+  const [tab, setTab] = useState("dashboard");
   const [activeDoc, setActiveDoc] = useState(null);
   const logPageSize = 25;
 
@@ -113,6 +113,26 @@ export default function AdminPage() {
     const start = (logPage - 1) * logPageSize;
     return sortedLogs.slice(start, start + logPageSize);
   }, [sortedLogs, logPage, logPageSize]);
+
+  const topReadDocs = useMemo(() => {
+    const viewLogs = logs.filter((l) => l.action === "VIEW_DOC");
+    const counts = {};
+    viewLogs.forEach((l) => {
+      if (l.details) {
+        counts[l.details] = (counts[l.details] || 0) + 1;
+      }
+    });
+
+    const sortedDocIds = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+
+    return sortedDocIds
+      .map((id) => {
+        const doc = documents.find((d) => d.id === id);
+        return doc ? { ...doc, viewCount: counts[id] } : null;
+      })
+      .filter(Boolean)
+      .slice(0, 5);
+  }, [logs, documents]);
 
   useEffect(() => {
     setLogPage((page) => Math.min(page, totalLogPages));
@@ -257,6 +277,7 @@ export default function AdminPage() {
         {}
         <div className="flex bg-slate-50 p-1.5 border-b border-slate-200 overflow-x-auto">
           {[
+            { id: "dashboard", label: "Tổng quan", icon: "📊" },
             { id: "users", label: `Tài khoản (${users.length})`, icon: "👥" },
             { id: "docs", label: `Văn bản (${documents.length})`, icon: "📚" },
             { id: "logs", label: `Nhật ký (${sortedLogs.length})`, icon: "📋" },
@@ -271,6 +292,65 @@ export default function AdminPage() {
             </button>
           ))}
         </div>
+
+        {}
+        {tab === "dashboard" && (
+          <div className="p-6">
+            <h3 className="text-lg font-bold text-slate-800 mb-6">Thống kê tổng quan</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="bg-blue-50 rounded-2xl p-6 border border-blue-100 flex flex-col justify-center items-center shadow-sm">
+                <div className="text-4xl font-black text-blue-600 mb-2">{users.length}</div>
+                <div className="text-[11px] font-bold text-blue-800 uppercase tracking-wider">Tài khoản</div>
+              </div>
+              <div className="bg-emerald-50 rounded-2xl p-6 border border-emerald-100 flex flex-col justify-center items-center shadow-sm">
+                <div className="text-4xl font-black text-emerald-600 mb-2">
+                  {logs.filter(l => l.action === "LOGIN").length}
+                </div>
+                <div className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider">Lượt đăng nhập</div>
+              </div>
+              <div className="bg-purple-50 rounded-2xl p-6 border border-purple-100 flex flex-col justify-center items-center shadow-sm">
+                <div className="text-4xl font-black text-purple-600 mb-2">
+                  {logs.filter(l => l.action === "VIEW_DOC").length}
+                </div>
+                <div className="text-[11px] font-bold text-purple-800 uppercase tracking-wider">Lượt đọc tài liệu</div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-xl">🔥</span>
+              <h3 className="text-sm font-bold text-slate-800 m-0 uppercase tracking-wider">Văn bản được đọc nhiều nhất</h3>
+            </div>
+            
+            {topReadDocs.length > 0 ? (
+              <div className="grid grid-cols-1 gap-3">
+                {topReadDocs.map((doc, index) => (
+                  <div 
+                    key={doc.id} 
+                    onClick={() => setActiveDoc(doc)}
+                    className="flex items-center gap-4 p-4 rounded-xl border border-slate-200 hover:border-gold/50 bg-white hover:bg-slate-50 transition-all cursor-pointer shadow-sm group"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 font-bold flex items-center justify-center text-xs group-hover:bg-gold/20 group-hover:text-forest transition-colors flex-shrink-0">
+                      #{index + 1}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-slate-800 text-sm truncate mb-0.5">{doc.title}</div>
+                      <div className="text-[11px] text-slate-500">{doc.issuing_authority || "Chưa cập nhật"} • {doc.issue_number || "Không có số"}</div>
+                    </div>
+                    <div className="flex items-center gap-1.5 px-3 py-1 bg-purple-50 rounded-lg border border-purple-100 flex-shrink-0">
+                      <span className="text-xs">👁️</span>
+                      <span className="text-xs font-bold text-purple-700">{doc.viewCount} lượt</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center p-8 border border-dashed border-slate-200 rounded-xl text-slate-400 text-sm font-bold bg-slate-50/50">
+                Chưa có dữ liệu lượt đọc.
+              </div>
+            )}
+          </div>
+        )}
 
         {}
         {tab === "users" && (

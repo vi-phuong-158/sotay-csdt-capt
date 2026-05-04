@@ -5,7 +5,7 @@ import { useBookmarks, docKey } from "../hooks/useBookmarks";
 import ReaderPage from "./ReaderPage";
 
 export default function HomePage({ setActiveNav }) {
-  const { user, documents, logActivity, newDocsCount, clearNewDocs } = useApp();
+  const { user, documents, logs, logActivity, newDocsCount, clearNewDocs } = useApp();
   const { bookmarks, toggleBookmark, isBookmarked } = useBookmarks();
 
   const [activeDoc, setActiveDoc] = useState(null);
@@ -13,10 +13,15 @@ export default function HomePage({ setActiveNav }) {
   const [sortOrder, setSortOrder] = useState("desc");
   const [showNewBanner, setShowNewBanner] = useState(newDocsCount > 0);
   const [newCountSnapshot] = useState(newDocsCount);
+  const [visibleCount, setVisibleCount] = useState(10);
 
   useEffect(() => {
     clearNewDocs();
   }, [clearNewDocs]);
+
+  useEffect(() => {
+    setVisibleCount(10);
+  }, [selectedCategory, sortOrder]);
 
   const CATEGORIES = [
     { value: "all", label: "Tất cả chuyên mục" },
@@ -25,6 +30,26 @@ export default function HomePage({ setActiveNav }) {
     { value: "huong-dan-dieu-tra", label: "Hướng dẫn điều tra" },
     { value: "khac", label: "Khác" },
   ];
+
+  const loginCount = useMemo(
+    () => logs.filter((l) => l.action === "LOGIN").length,
+    [logs]
+  );
+
+  const viewDocCount = useMemo(
+    () => logs.filter((l) => l.action === "VIEW_DOC").length,
+    [logs]
+  );
+
+  const docViewCounts = useMemo(() => {
+    const counts = {};
+    logs.forEach((l) => {
+      if (l.action === "VIEW_DOC" && l.details) {
+        counts[l.details] = (counts[l.details] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [logs]);
 
   const stats = [
     {
@@ -41,6 +66,20 @@ export default function HomePage({ setActiveNav }) {
       color: "border-gold",
       bgColor: "bg-gold/5",
     },
+    {
+      label: "LƯỢT ĐĂNG NHẬP",
+      value: loginCount,
+      icon: "🔐",
+      color: "border-emerald-400",
+      bgColor: "bg-emerald-50",
+    },
+    {
+      label: "LƯỢT ĐỌC TÀI LIỆU",
+      value: viewDocCount,
+      icon: "👁️",
+      color: "border-purple-400",
+      bgColor: "bg-purple-50",
+    },
   ];
 
   const filteredDocs = useMemo(() => {
@@ -56,13 +95,19 @@ export default function HomePage({ setActiveNav }) {
         );
       });
     }
-    result = [...result].sort((a, b) => {
-      const dateA = new Date(a.updatedAt || a.created_at || 0).getTime();
-      const dateB = new Date(b.updatedAt || b.created_at || 0).getTime();
-      return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
-    });
+    if (sortOrder === "popular") {
+      result = [...result].sort(
+        (a, b) => (docViewCounts[b.id] || 0) - (docViewCounts[a.id] || 0)
+      );
+    } else {
+      result = [...result].sort((a, b) => {
+        const dateA = new Date(a.updatedAt || a.created_at || 0).getTime();
+        const dateB = new Date(b.updatedAt || b.created_at || 0).getTime();
+        return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
+      });
+    }
     return result;
-  }, [documents, selectedCategory, sortOrder]);
+  }, [documents, selectedCategory, sortOrder, docViewCounts]);
 
   const bookmarkedDocs = useMemo(
     () =>
@@ -71,6 +116,14 @@ export default function HomePage({ setActiveNav }) {
         .filter(Boolean),
     [bookmarks, documents],
   );
+
+  const greeting = useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 11) return "Chào buổi sáng";
+    if (hour >= 11 && hour < 14) return "Chào buổi trưa";
+    if (hour >= 14 && hour < 18) return "Chào buổi chiều";
+    return "Chào buổi tối";
+  }, []);
 
   const handleOpenDoc = (doc) => {
     logActivity(user.id, "VIEW_DOC", doc.id);
@@ -94,7 +147,7 @@ export default function HomePage({ setActiveNav }) {
         <div className="absolute right-0 top-0 w-64 h-64 bg-slate-50 rounded-full -translate-y-1/2 translate-x-1/3 z-0" />
         <div className="relative z-10">
           <h1 className="text-3xl font-extrabold text-forest m-0 mb-3 tracking-tight">
-            Chào, {user?.full_name || user?.username}
+            {greeting}, {user?.full_name || user?.username}
           </h1>
           <p className="text-slate-600 text-base m-0 mb-8 max-w-md leading-relaxed font-bold">
             Cổng thông tin tra cứu văn bản quy phạm pháp luật nội bộ.
@@ -143,7 +196,7 @@ export default function HomePage({ setActiveNav }) {
           Tổng quan hệ thống
         </h2>
       </div>
-      <div className="grid grid-cols-2 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {stats.map((s) => (
           <div
             key={s.label}
@@ -235,51 +288,62 @@ export default function HomePage({ setActiveNav }) {
             >
               <option value="desc">Mới cập nhật</option>
               <option value="asc">Cũ nhất</option>
+              <option value="popular">Xem nhiều nhất</option>
             </select>
           </div>
         </div>
         <div className="flex flex-col bg-white">
           {filteredDocs.length > 0 ? (
-            filteredDocs.map((doc, i) => (
-              <div
-                key={doc.id || `doc-${doc.title}-${doc.issue_number}-${i}`}
-                onClick={() => handleOpenDoc(doc)}
-                className={`p-[14px_20px] border-none bg-transparent cursor-pointer text-left flex items-center gap-3 transition-all hover:bg-slate-50
-                ${i < filteredDocs.length - 1 ? "border-b border-slate-100" : ""}`}
-              >
-                <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center text-lg shrink-0">
-                  📄
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-[14px] font-bold text-slate-800 mb-0.5 text-justify">
-                    {doc.title}
-                  </div>
-                  <div className="flex flex-wrap items-center gap-3 text-[11px]">
-                    <span className="text-forest font-bold">
-                      {doc.categoryLabel || "Khác"}
-                    </span>
-                    <span className="text-slate-600 font-bold">
-                      {doc.issue_number}
-                    </span>
-                    <span className="text-slate-500 font-bold">
-                      • {formatDate(doc.updatedAt || doc.created_at)}
-                    </span>
-                  </div>
-                </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleBookmark(docKey(doc));
-                  }}
-                  className={`shrink-0 text-xl bg-transparent border-none cursor-pointer transition-colors leading-none px-1
-                  ${isBookmarked(docKey(doc)) ? "text-gold" : "text-slate-200 hover:text-gold/60"}`}
-                  title={isBookmarked(docKey(doc)) ? "Bỏ ghim" : "Ghim văn bản"}
+            <>
+              {filteredDocs.slice(0, visibleCount).map((doc, i) => (
+                <div
+                  key={doc.id || `doc-${doc.title}-${doc.issue_number}-${i}`}
+                  onClick={() => handleOpenDoc(doc)}
+                  className={`p-[14px_20px] border-none bg-transparent cursor-pointer text-left flex items-center gap-3 transition-all hover:bg-slate-50
+                  ${i < Math.min(visibleCount, filteredDocs.length) - 1 ? "border-b border-slate-100" : ""}`}
                 >
-                  ★
+                  <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center text-lg shrink-0">
+                    📄
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[14px] font-bold text-slate-800 mb-0.5 text-justify">
+                      {doc.title}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3 text-[11px]">
+                      <span className="text-forest font-bold">
+                        {doc.categoryLabel || "Khác"}
+                      </span>
+                      <span className="text-slate-600 font-bold">
+                        {doc.issue_number}
+                      </span>
+                      <span className="text-slate-500 font-bold">
+                        • {formatDate(doc.updatedAt || doc.created_at)}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleBookmark(docKey(doc));
+                    }}
+                    className={`shrink-0 text-xl bg-transparent border-none cursor-pointer transition-colors leading-none px-1
+                    ${isBookmarked(docKey(doc)) ? "text-gold" : "text-slate-200 hover:text-gold/60"}`}
+                    title={isBookmarked(docKey(doc)) ? "Bỏ ghim" : "Ghim văn bản"}
+                  >
+                    ★
+                  </button>
+                  <div className="text-slate-300 shrink-0">❯</div>
+                </div>
+              ))}
+              {visibleCount < filteredDocs.length && (
+                <button
+                  onClick={() => setVisibleCount((c) => c + 10)}
+                  className="w-full py-4 border-t border-slate-100 bg-slate-50 text-forest font-bold text-sm hover:bg-slate-100 active:bg-slate-200 transition-colors"
+                >
+                  Xem thêm ({filteredDocs.length - visibleCount} văn bản) ↓
                 </button>
-                <div className="text-slate-300 shrink-0">❯</div>
-              </div>
-            ))
+              )}
+            </>
           ) : (
             <div className="p-8 text-center text-slate-400 text-sm">
               Không có văn bản nào trong chuyên mục này.
