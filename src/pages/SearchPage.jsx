@@ -238,7 +238,7 @@ export default function SearchPage() {
                       </span>
                     )}
                   </div>
-                  <h3 className="m-0 mb-2 text-base font-bold leading-snug text-forest-dark">
+                  <h3 className="m-0 mb-2 text-base font-bold leading-snug text-forest-dark text-justify">
                     {doc.title}
                   </h3>
                   <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1">

@@ -251,7 +251,7 @@ export default function HomePage({ setActiveNav }) {
                   📄
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-[14px] font-bold text-slate-800 mb-0.5 truncate">
+                  <div className="text-[14px] font-bold text-slate-800 mb-0.5 text-justify">
                     {doc.title}
                   </div>
                   <div className="flex flex-wrap items-center gap-3 text-[11px]">

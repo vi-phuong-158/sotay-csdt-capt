@@ -65,8 +65,8 @@ export const getDirectImageUrl = (url) => {
 
 export const validateFileHeader = (file) => {
   return new Promise((resolve) => {
-    if (file.size > 5 * 1024 * 1024) {
-      resolve({ isValid: false, error: "Kích thước file vượt quá 5MB." });
+    if (file.size > 15 * 1024 * 1024) {
+      resolve({ isValid: false, error: "Kích thước file vượt quá 15MB." });
       return;
     }
 
