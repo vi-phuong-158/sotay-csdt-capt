@@ -19,7 +19,7 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const result = await login(username.trim(), password);
+      const result = await login(username.trim().toLowerCase(), password);
       if (result.error) setError(result.error);
     } catch (err) {
       setError("Lỗi hệ thống, vui lòng thử lại sau.");
@@ -44,7 +44,7 @@ export default function LoginPage() {
             Công an tỉnh Phú Thọ
           </h1>
           <h2 className="text-slate-500 text-[13px] font-semibold m-0 mt-1 uppercase tracking-wide">
-            Văn phòng Cảnh sát điều tra
+            Văn phòng Cơ quan Cảnh sát điều tra
           </h2>
         </div>
 
