@@ -166,7 +166,7 @@ export default function ReaderPage({ doc, searchTerm, onBack }) {
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                     Tóm tắt văn bản
                   </span>
-                  <p className="m-0 text-sm text-slate-600 leading-relaxed whitespace-pre-wrap text-justify">
+                  <p className="m-0 text-sm text-slate-600 leading-relaxed whitespace-pre-wrap text-justify break-all">
                     {doc.summary}
                   </p>
                 </div>

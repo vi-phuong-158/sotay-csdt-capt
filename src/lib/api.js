@@ -32,7 +32,7 @@ export async function login(username, password) {
   if (DEMO_MODE) {
     const { MOCK_USERS } = await import("../data/mockData.js");
     const user = MOCK_USERS.find(
-      (u) => u.username === username && u.password === password,
+      (u) => u.username.toLowerCase() === username.toLowerCase() && u.password === password,
     );
     if (user) {
       return {
