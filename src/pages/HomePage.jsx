@@ -200,9 +200,9 @@ export default function HomePage({ setActiveNav }) {
           <div className="flex items-center gap-2 mb-3">
             <span className="text-xl">📌</span>
             <h2 className="text-sm font-extrabold text-amber-800 m-0 uppercase tracking-widest">
-              Văn bản quan trọng / Được ghim
+              Văn bản được ghim
             </h2>
-            <span className="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full text-[10px] font-bold">
+            <span className="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap shrink-0">
               Hệ thống
             </span>
           </div>

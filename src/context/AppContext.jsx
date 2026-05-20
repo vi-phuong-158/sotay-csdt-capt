@@ -4,6 +4,7 @@ import React, {
   useState,
   useEffect,
   useCallback,
+  useRef,
 } from "react";
 import ToastContainer from "../components/Toast";
 import {
@@ -26,6 +27,10 @@ export function AppProvider({ children }) {
   const [toasts, setToasts] = useState([]);
   const [logs, setLogs] = useState([]);
   const [documents, setDocuments] = useState([]);
+  const documentsRef = useRef(documents);
+  useEffect(() => {
+    documentsRef.current = documents;
+  }, [documents]);
   const [loading, setLoading] = useState(true);
   const [newDocsCount, setNewDocsCount] = useState(0);
 
@@ -257,12 +262,16 @@ export function AppProvider({ children }) {
         return false;
       }
 
-      let originalDoc = null;
+      const originalDoc = documentsRef.current.find((d) => d.id === id);
+      if (!originalDoc) {
+        showToast("Không tìm thấy văn bản để cập nhật.", "error");
+        return false;
+      }
+
       // Cập nhật giao diện ngay lập tức (Optimistic Update)
-      setDocuments((prev) => {
-        originalDoc = prev.find((d) => d.id === id);
-        return prev.map((d) => (d.id === id ? { ...d, ...updates } : d));
-      });
+      setDocuments((prev) =>
+        prev.map((d) => (d.id === id ? { ...d, ...updates } : d)),
+      );
 
       try {
         const result = await updateRow("documents", id, updates, token);
@@ -271,20 +280,16 @@ export function AppProvider({ children }) {
           return true;
         } else {
           // Hoàn tác nếu máy chủ báo lỗi
-          if (originalDoc) {
-            setDocuments((prev) =>
-              prev.map((d) => (d.id === id ? originalDoc : d)),
-            );
-          }
+          setDocuments((prev) =>
+            prev.map((d) => (d.id === id ? originalDoc : d)),
+          );
           throw new Error(result.error || "Lỗi khi cập nhật văn bản");
         }
       } catch (error) {
         // Hoàn tác nếu có lỗi kết nối mạng
-        if (originalDoc) {
-          setDocuments((prev) =>
-            prev.map((d) => (d.id === id ? originalDoc : d)),
-          );
-        }
+        setDocuments((prev) =>
+          prev.map((d) => (d.id === id ? originalDoc : d)),
+        );
         showToast(error.message, "error");
         if (error.message.includes("Phiên đăng nhập")) logout();
         return false;
