@@ -108,7 +108,44 @@ export default function AdminPage() {
     return documents.filter((d) => {
       const titleMatch = d.title && d.title.normalize("NFC").toLowerCase().includes(q);
       const summaryMatch = d.summary && d.summary.normalize("NFC").toLowerCase().includes(q);
-      return titleMatch || summaryMatch;
+      
+      let contentMatch = false;
+      if (d.content) {
+        let contentObj = d.content;
+        if (typeof contentObj === "string") {
+          try {
+            contentObj = JSON.parse(contentObj);
+          } catch (e) {}
+        }
+        if (contentObj && Array.isArray(contentObj.chapters)) {
+          for (let c = 0; c < contentObj.chapters.length; c++) {
+            const chapter = contentObj.chapters[c];
+            if (chapter) {
+              if (chapter.title && chapter.title.normalize("NFC").toLowerCase().includes(q)) {
+                contentMatch = true;
+                break;
+              }
+              if (Array.isArray(chapter.articles)) {
+                for (let a = 0; a < chapter.articles.length; a++) {
+                  const article = chapter.articles[a];
+                  if (article) {
+                    if (
+                      (article.title && article.title.normalize("NFC").toLowerCase().includes(q)) ||
+                      (article.text && article.text.normalize("NFC").toLowerCase().includes(q))
+                    ) {
+                      contentMatch = true;
+                      break;
+                    }
+                  }
+                }
+              }
+            }
+            if (contentMatch) break;
+          }
+        }
+      }
+
+      return titleMatch || summaryMatch || contentMatch;
     });
   }, [documents, docSearch]);
 
@@ -515,7 +552,7 @@ export default function AdminPage() {
               <div className="relative flex-1">
                 <input
                   type="text"
-                  placeholder="Tìm kiếm theo tiêu đề hoặc nội dung tóm tắt (phải gõ đúng tiếng Việt)..."
+                  placeholder="Tìm kiếm theo tiêu đề hoặc nội dung chi tiết (phải gõ đúng tiếng Việt)..."
                   value={docSearch}
                   onChange={(e) => setDocSearch(e.target.value)}
                   className="w-full p-2.5 pl-8 rounded-xl bg-white border border-slate-200 text-xs outline-none focus:border-forest/50 focus:ring-1 focus:ring-forest/20 text-slate-700 placeholder-slate-400 transition-all font-medium"

@@ -388,10 +388,48 @@ function getSheetDataAsObjects(sheet) {
 
   var headers = getHeaders(sheet);
   var values = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
+  var sheetName = sheet.getName();
 
+  // Tìm cột ID không phân biệt hoa thường và khoảng trắng
+  var idColIndex = -1;
+  for (var j = 0; j < headers.length; j++) {
+    if (String(headers[j]).trim().toLowerCase() === "id") {
+      idColIndex = j;
+      break;
+    }
+  }
+
+  // Tự động chèn cột 'id' ở vị trí đầu tiên nếu hoàn toàn không tồn tại cột id
+  if (idColIndex === -1 && lastCol > 0) {
+    sheet.insertColumnBefore(1);
+    sheet.getRange(1, 1).setValue("id");
+    headers = getHeaders(sheet);
+    idColIndex = 0;
+    lastCol = sheet.getLastColumn();
+    values = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
+  }
+
+  var didModify = false;
   var result = [];
   for (var i = 0; i < values.length; i++) {
     var obj = {};
+    var rowIdx = i + 2;
+
+    // Tự động sinh ID nếu dòng bị thiếu ID (nhập trực tiếp trên Google Sheets)
+    if (idColIndex !== -1) {
+      var rowId = values[i][idColIndex];
+      if (rowId === null || rowId === undefined || String(rowId).trim() === "") {
+        var prefix = "doc-";
+        if (sheetName === "users") prefix = "u-";
+        else if (sheetName === "activity_logs") prefix = "log-";
+
+        var generatedId = prefix + new Date().getTime() + "-" + Math.floor(Math.random() * 1000);
+        sheet.getRange(rowIdx, idColIndex + 1).setNumberFormat("@").setValue(generatedId);
+        values[i][idColIndex] = generatedId;
+        didModify = true;
+      }
+    }
+
     for (var j = 0; j < headers.length; j++) {
       var val = values[i][j];
       if (
@@ -402,19 +440,33 @@ function getSheetDataAsObjects(sheet) {
           val = JSON.parse(val);
         } catch (e) {}
       }
-      if (shouldWriteAsPlainText(sheet.getName(), headers[j])) {
+      if (shouldWriteAsPlainText(sheetName, headers[j])) {
         val = val === null || val === undefined ? "" : String(val);
       }
       obj[headers[j]] = val;
     }
     result.push(obj);
   }
+
+  // Đảm bảo ghi và đồng bộ các ID tự sinh xuống sheet ngay lập tức
+  if (didModify) {
+    SpreadsheetApp.flush();
+  }
+
   return result;
 }
 
 function findRowIndexById(sheet, id) {
   var headers = getHeaders(sheet);
-  var idColIndex = headers.indexOf("id");
+  
+  // Tìm cột ID không phân biệt hoa thường và khoảng trắng
+  var idColIndex = -1;
+  for (var j = 0; j < headers.length; j++) {
+    if (String(headers[j]).trim().toLowerCase() === "id") {
+      idColIndex = j;
+      break;
+    }
+  }
 
   if (idColIndex === -1) return -1;
 
@@ -423,7 +475,7 @@ function findRowIndexById(sheet, id) {
 
   var idValues = sheet.getRange(2, idColIndex + 1, lastRow - 1, 1).getValues();
   for (var i = 0; i < idValues.length; i++) {
-    if (String(idValues[i][0]) === String(id)) {
+    if (String(idValues[i][0]).trim() === String(id).trim()) {
       return i + 2;
     }
   }

@@ -233,6 +233,9 @@ export function AppProvider({ children }) {
   const deleteDocumentAction = useCallback(
     async (id) => {
       try {
+        if (!id) {
+          throw new Error("Không thể thực hiện do thiếu ID của văn bản. Vui lòng tải lại trang.");
+        }
         const result = await deleteRow("documents", id, token);
         if (result.success) {
           setDocuments((prev) => prev.filter((d) => d.id !== id));
@@ -250,6 +253,9 @@ export function AppProvider({ children }) {
   const updateDocumentAction = useCallback(
     async (id, updates) => {
       try {
+        if (!id) {
+          throw new Error("Không thể cập nhật do thiếu ID của văn bản. Vui lòng tải lại trang.");
+        }
         const result = await updateRow("documents", id, updates, token);
         if (result.success) {
           setDocuments((prev) =>

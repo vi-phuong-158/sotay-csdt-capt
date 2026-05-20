@@ -70,6 +70,34 @@ export default function SearchPage() {
           if (fuzzyMatch(doc.issue_number, normalQ, lowerQ)) score += 8;
           if (fuzzyMatch(doc.issuing_authority, normalQ, lowerQ)) score += 5;
           if (fuzzyMatch(doc.summary, normalQ, lowerQ)) score += 2;
+
+          // Tìm kiếm trong chương, điều, nội dung chi tiết của văn bản
+          if (doc.content) {
+            let contentObj = doc.content;
+            if (typeof contentObj === "string") {
+              try {
+                contentObj = JSON.parse(contentObj);
+              } catch (e) {}
+            }
+            if (contentObj && Array.isArray(contentObj.chapters)) {
+              for (let c = 0; c < contentObj.chapters.length; c++) {
+                const chapter = contentObj.chapters[c];
+                if (chapter) {
+                  if (fuzzyMatch(chapter.title, normalQ, lowerQ)) score += 3;
+                  if (Array.isArray(chapter.articles)) {
+                    for (let a = 0; a < chapter.articles.length; a++) {
+                      const article = chapter.articles[a];
+                      if (article) {
+                        if (fuzzyMatch(article.title, normalQ, lowerQ)) score += 4;
+                        if (fuzzyMatch(article.text, normalQ, lowerQ)) score += 6;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+
           return { ...doc, score };
         })
         .filter((d) => d.score > 0)
