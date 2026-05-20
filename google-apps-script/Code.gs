@@ -24,6 +24,7 @@ function setup() {
       "drive_link_type",
       "updatedAt",
       "created_at",
+      "is_pinned",
     ],
     activity_logs: [
       "id",

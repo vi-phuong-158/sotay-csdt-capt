@@ -18,6 +18,7 @@ export default function AdminPage() {
     deleteUser,
     resetPassword,
     addDocument,
+    updateDocument,
     deleteDocument,
     user: currentUser,
     token,
@@ -162,6 +163,7 @@ export default function AdminPage() {
     category: "hinh-su",
     summary: "",
     drive_link: "",
+    is_pinned: false,
   });
   const [selectedFile, setSelectedFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -226,6 +228,7 @@ export default function AdminPage() {
         CATEGORIES.find((c) => c.value === newDoc.category)?.label || "Khác",
       drive_link: driveUrl,
       drive_link_type: fileType,
+      is_pinned: newDoc.is_pinned || false,
     };
 
     await addDocument(docObj);
@@ -238,6 +241,7 @@ export default function AdminPage() {
       category: "hinh-su",
       summary: "",
       drive_link: "",
+      is_pinned: false,
     });
     setSelectedFile(null);
     setIsUploading(false);
@@ -507,6 +511,9 @@ export default function AdminPage() {
                     <th className="p-4 border-b border-slate-100 font-bold">
                       Chuyên mục
                     </th>
+                    <th className="p-4 border-b border-slate-100 font-bold">
+                      Cập nhật
+                    </th>
                     <th className="p-4 border-b border-slate-100 font-bold text-right">
                       Thao tác
                     </th>
@@ -519,8 +526,13 @@ export default function AdminPage() {
                       className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors"
                     >
                       <td className="p-4">
-                        <div className="text-slate-900 font-bold text-[13px] line-clamp-1">
-                          {d.title}
+                        <div className="text-slate-900 font-bold text-[13px] line-clamp-1 flex items-center gap-1.5">
+                          {d.is_pinned && (
+                            <span className="text-amber-500 cursor-help flex-shrink-0" title="Văn bản được ghim">
+                              📌
+                            </span>
+                          )}
+                          <span className="truncate">{d.title}</span>
                         </div>
                         <div className="text-[11px] text-slate-500 font-bold">
                           {d.issue_number || "Chưa có số"}
@@ -551,6 +563,18 @@ export default function AdminPage() {
                             className="bg-blue-50 text-blue-600 border border-blue-100 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer hover:bg-blue-100 transition-colors"
                           >
                             Xem
+                          </button>
+                          <button
+                            onClick={() => updateDocument(d.id, { is_pinned: !d.is_pinned })}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all border flex items-center gap-1
+                              ${
+                                d.is_pinned
+                                  ? "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100"
+                                  : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
+                              }`}
+                            title={d.is_pinned ? "Hủy ghim văn bản này khỏi trang chủ" : "Ghim văn bản này lên đầu trang chủ"}
+                          >
+                            {d.is_pinned ? "Bỏ ghim" : "Ghim"}
                           </button>
                           <button
                             onClick={() => {
@@ -871,6 +895,23 @@ export default function AdminPage() {
                 onChange={(e) => setSelectedFile(e.target.files[0])}
                 className="w-full p-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-500 outline-none focus:border-forest/50 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-forest file:text-gold hover:file:bg-forest-dark transition-all"
               />
+            </div>
+            <div className="flex items-center gap-2.5 py-1.5 select-none cursor-pointer bg-amber-50/40 border border-amber-100/50 rounded-xl px-3.5">
+              <input
+                type="checkbox"
+                id="is_pinned"
+                checked={newDoc.is_pinned || false}
+                onChange={(e) =>
+                  setNewDoc({ ...newDoc, is_pinned: e.target.checked })
+                }
+                className="w-4 h-4 rounded text-forest border-slate-300 focus:ring-forest cursor-pointer"
+              />
+              <label
+                htmlFor="is_pinned"
+                className="text-xs font-bold text-slate-700 cursor-pointer flex items-center gap-1"
+              >
+                📌 Ghim văn bản này lên đầu trang chủ
+              </label>
             </div>
             <div>
               <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">

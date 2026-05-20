@@ -229,6 +229,11 @@ export default function SearchPage() {
 
                 <div className="pr-8">
                   <div className="mb-2 flex flex-wrap items-center gap-2">
+                    {doc.is_pinned && (
+                      <span className="rounded bg-amber-50 border border-amber-200 px-2 py-0.5 text-[10px] font-extrabold text-amber-700 flex items-center gap-0.5" title="Văn bản được ghim">
+                        📌 GHIM
+                      </span>
+                    )}
                     <span className="rounded bg-forest/10 px-2 py-0.5 text-[10px] font-bold text-forest">
                       {doc.categoryLabel}
                     </span>

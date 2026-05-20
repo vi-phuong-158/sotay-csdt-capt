@@ -169,6 +169,7 @@ export const MOCK_DOCUMENTS = [
       "Quy định về tội phạm và hình phạt. Bộ luật này là cơ sở pháp lý để đấu tranh phòng chống tội phạm, bảo vệ chủ quyền quốc gia, quyền con người, quyền công dân.",
     updatedAt: "2026-02-10",
     drive_link: "https://drive.google.com/file/d/demo2",
+    is_pinned: true,
     content: {
       chapters: [
         {
@@ -239,6 +240,7 @@ export const MOCK_DOCUMENTS = [
       "Hướng dẫn chi tiết quy trình tiếp nhận, thu thập, bảo quản, vận chuyển và xử lý vật chứng trong điều tra vụ án hình sự theo quy định hiện hành.",
     updatedAt: "2026-03-01",
     drive_link: "",
+    is_pinned: true,
     content: {
       chapters: [
         {

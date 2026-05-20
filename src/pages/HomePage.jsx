@@ -117,6 +117,11 @@ export default function HomePage({ setActiveNav }) {
     [bookmarks, documents],
   );
 
+  const pinnedDocs = useMemo(
+    () => documents.filter((d) => d.is_pinned === true),
+    [documents]
+  );
+
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
     if (hour >= 5 && hour < 11) return "Chào buổi sáng";
@@ -186,6 +191,51 @@ export default function HomePage({ setActiveNav }) {
           >
             ✕
           </button>
+        </div>
+      )}
+
+      {}
+      {pinnedDocs.length > 0 && (
+        <div className="mb-6 animate-fade-up">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-xl">📌</span>
+            <h2 className="text-sm font-extrabold text-amber-800 m-0 uppercase tracking-widest">
+              Văn bản quan trọng / Được ghim
+            </h2>
+            <span className="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full text-[10px] font-bold">
+              Hệ thống
+            </span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {pinnedDocs.map((doc) => (
+              <div
+                key={doc.id || `pinned-${doc.title}`}
+                onClick={() => handleOpenDoc(doc)}
+                className="bg-gradient-to-br from-amber-50/80 to-white border border-amber-200/70 hover:border-amber-400 hover:shadow-md rounded-2xl p-5 cursor-pointer transition-all relative flex flex-col justify-between group overflow-hidden"
+              >
+                <div className="absolute right-0 top-0 translate-x-4 -translate-y-4 w-16 h-16 bg-amber-100/40 rounded-full group-hover:scale-125 transition-transform" />
+                <div className="relative z-10">
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <span className="bg-forest text-gold px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
+                      {doc.categoryLabel || "Khác"}
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-bold">
+                      {doc.issue_number || "Chưa có số"}
+                    </span>
+                  </div>
+                  <h3 className="text-[14px] font-bold text-slate-800 leading-snug line-clamp-2 group-hover:text-forest transition-colors mb-2 text-justify">
+                    {doc.title}
+                  </h3>
+                </div>
+                <div className="relative z-10 flex items-center justify-between border-t border-amber-100/50 pt-2.5 mt-2.5 text-[11px] text-slate-500">
+                  <span>📅 {doc.doc_date ? new Date(doc.doc_date).toLocaleDateString("vi-VN") : "---"}</span>
+                  <span className="text-forest font-bold group-hover:translate-x-1 transition-transform flex items-center gap-0.5">
+                    Đọc ngay <span>❯</span>
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -306,8 +356,13 @@ export default function HomePage({ setActiveNav }) {
                     📄
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-[14px] font-bold text-slate-800 mb-0.5 text-justify">
-                      {doc.title}
+                    <div className="text-[14px] font-bold text-slate-800 mb-0.5 text-justify flex flex-wrap items-center gap-1.5">
+                      {doc.is_pinned && (
+                        <span className="text-amber-600 text-[10px] font-extrabold bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded flex items-center gap-0.5 shrink-0" title="Văn bản được ghim">
+                          📌 GHIM
+                        </span>
+                      )}
+                      <span>{doc.title}</span>
                     </div>
                     <div className="flex flex-wrap items-center gap-3 text-[11px]">
                       <span className="text-forest font-bold">

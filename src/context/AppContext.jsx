@@ -42,7 +42,16 @@ export function AppProvider({ children }) {
           fetchSheet("activity_logs"),
         ]);
 
-        setDocuments(fetchedDocs);
+        const normalizedDocs = (fetchedDocs || []).map((d) => ({
+          ...d,
+          is_pinned:
+            d.is_pinned === true ||
+            String(d.is_pinned).toLowerCase() === "true" ||
+            d.is_pinned === 1 ||
+            String(d.is_pinned) === "1",
+        }));
+
+        setDocuments(normalizedDocs);
         setLogs(fetchedLogs);
       } catch (error) {
         console.error("Lỗi khi tải dữ liệu:", error);
@@ -238,6 +247,28 @@ export function AppProvider({ children }) {
     [showToast, token],
   );
 
+  const updateDocumentAction = useCallback(
+    async (id, updates) => {
+      try {
+        const result = await updateRow("documents", id, updates, token);
+        if (result.success) {
+          setDocuments((prev) =>
+            prev.map((d) => (d.id === id ? { ...d, ...updates } : d)),
+          );
+          showToast("Đã cập nhật trạng thái văn bản.", "success");
+          return true;
+        } else {
+          throw new Error(result.error || "Lỗi khi cập nhật văn bản");
+        }
+      } catch (error) {
+        showToast(error.message, "error");
+        if (error.message.includes("Phiên đăng nhập")) logout();
+        return false;
+      }
+    },
+    [showToast, token, logout],
+  );
+
   const changePassword = useCallback(
     async (oldPass, newPass) => {
       try {
@@ -274,6 +305,7 @@ export function AppProvider({ children }) {
         showToast,
         addDocument,
         deleteDocument: deleteDocumentAction,
+        updateDocument: updateDocumentAction,
         changePassword,
       }}
     >
