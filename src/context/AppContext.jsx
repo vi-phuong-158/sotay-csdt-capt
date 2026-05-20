@@ -252,21 +252,39 @@ export function AppProvider({ children }) {
 
   const updateDocumentAction = useCallback(
     async (id, updates) => {
+      if (!id) {
+        showToast("Không thể cập nhật do thiếu ID của văn bản. Vui lòng tải lại trang.", "error");
+        return false;
+      }
+
+      let originalDoc = null;
+      // Cập nhật giao diện ngay lập tức (Optimistic Update)
+      setDocuments((prev) => {
+        originalDoc = prev.find((d) => d.id === id);
+        return prev.map((d) => (d.id === id ? { ...d, ...updates } : d));
+      });
+
       try {
-        if (!id) {
-          throw new Error("Không thể cập nhật do thiếu ID của văn bản. Vui lòng tải lại trang.");
-        }
         const result = await updateRow("documents", id, updates, token);
         if (result.success) {
-          setDocuments((prev) =>
-            prev.map((d) => (d.id === id ? { ...d, ...updates } : d)),
-          );
           showToast("Đã cập nhật trạng thái văn bản.", "success");
           return true;
         } else {
+          // Hoàn tác nếu máy chủ báo lỗi
+          if (originalDoc) {
+            setDocuments((prev) =>
+              prev.map((d) => (d.id === id ? originalDoc : d)),
+            );
+          }
           throw new Error(result.error || "Lỗi khi cập nhật văn bản");
         }
       } catch (error) {
+        // Hoàn tác nếu có lỗi kết nối mạng
+        if (originalDoc) {
+          setDocuments((prev) =>
+            prev.map((d) => (d.id === id ? originalDoc : d)),
+          );
+        }
         showToast(error.message, "error");
         if (error.message.includes("Phiên đăng nhập")) logout();
         return false;
