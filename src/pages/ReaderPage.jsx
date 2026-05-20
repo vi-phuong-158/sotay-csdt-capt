@@ -15,14 +15,14 @@ export default function ReaderPage({ doc, searchTerm, onBack }) {
 
   const highlightText = (text) => {
     if (!searchTerm || !text) return text;
-    const term = removeVietnameseDiacritics(searchTerm.toLowerCase());
+    const term = searchTerm.toLowerCase().normalize("NFC");
     if (!term) return text;
 
     const words = text.split(" ");
     const result = [];
 
     words.forEach((word, idx) => {
-      const cleanWord = removeVietnameseDiacritics(word.toLowerCase());
+      const cleanWord = word.toLowerCase().normalize("NFC");
       if (cleanWord.includes(term) || term.includes(cleanWord)) {
         result.push(
           <mark

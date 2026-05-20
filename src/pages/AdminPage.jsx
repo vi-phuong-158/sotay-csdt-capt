@@ -28,6 +28,7 @@ export default function AdminPage() {
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   const [usersError, setUsersError] = useState("");
   const [userSearch, setUserSearch] = useState("");
+  const [docSearch, setDocSearch] = useState("");
   const [logPage, setLogPage] = useState(1);
   const [tab, setTab] = useState("dashboard");
   const [activeDoc, setActiveDoc] = useState(null);
@@ -100,6 +101,16 @@ export default function AdminPage() {
       return searchable.includes(query);
     });
   }, [users, userSearch]);
+
+  const filteredDocs = useMemo(() => {
+    if (!docSearch.trim()) return documents;
+    const q = docSearch.trim().normalize("NFC").toLowerCase();
+    return documents.filter((d) => {
+      const titleMatch = d.title && d.title.normalize("NFC").toLowerCase().includes(q);
+      const summaryMatch = d.summary && d.summary.normalize("NFC").toLowerCase().includes(q);
+      return titleMatch || summaryMatch;
+    });
+  }, [documents, docSearch]);
 
   const sortedLogs = useMemo(() => {
     return [...enrichedLogs].sort((a, b) => {
@@ -498,7 +509,131 @@ export default function AdminPage() {
                 + Thêm văn bản
               </button>
             </div>
-            <div className="overflow-x-auto">
+            
+            {/* Thanh tìm kiếm */}
+            <div className="p-3 bg-slate-50/50 border-b border-slate-100 flex gap-2">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm theo tiêu đề hoặc nội dung tóm tắt (phải gõ đúng tiếng Việt)..."
+                  value={docSearch}
+                  onChange={(e) => setDocSearch(e.target.value)}
+                  className="w-full p-2.5 pl-8 rounded-xl bg-white border border-slate-200 text-xs outline-none focus:border-forest/50 focus:ring-1 focus:ring-forest/20 text-slate-700 placeholder-slate-400 transition-all font-medium"
+                />
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs select-none">
+                  🔍
+                </span>
+                {docSearch && (
+                  <button
+                    onClick={() => setDocSearch("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-450 hover:text-slate-650 border-none bg-transparent cursor-pointer text-xs font-bold"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Mobile View: Card List */}
+            <div className="block md:hidden bg-slate-50 p-3 space-y-3">
+              {filteredDocs.map((d) => (
+                <div
+                  key={d.id}
+                  className={`rounded-2xl border transition-all p-4 shadow-sm space-y-3 relative overflow-hidden
+                    ${
+                      d.is_pinned
+                        ? "bg-gradient-to-br from-amber-50/60 via-white to-white border-amber-300 shadow-amber-100/50 shadow-md"
+                        : "bg-white border-slate-100"
+                    }`}
+                >
+                  {/* Decorative background circle for pinned cards */}
+                  {d.is_pinned && (
+                    <div className="absolute right-0 top-0 translate-x-4 -translate-y-4 w-12 h-12 bg-amber-100/40 rounded-full pointer-events-none" />
+                  )}
+                  
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <span className="bg-forest/10 text-forest px-2.5 py-0.5 rounded text-[10px] font-bold">
+                        {d.categoryLabel}
+                      </span>
+                      {d.is_pinned ? (
+                        <span className="bg-amber-500 text-white px-2 py-0.5 rounded-full text-[9px] font-extrabold tracking-wider uppercase flex items-center gap-0.5 shadow-sm shadow-amber-500/20 z-10">
+                          📌 ĐÃ GHIM
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-slate-400 font-bold">
+                          {formatDate(d.updatedAt || d.created_at)}
+                        </span>
+                      )}
+                    </div>
+                    
+                    <div className="text-slate-900 font-bold text-sm leading-snug flex items-start gap-1.5">
+                      {d.is_pinned && (
+                        <span className="text-amber-500 flex-shrink-0 cursor-help" title="Văn bản được ghim">
+                          📌
+                        </span>
+                      )}
+                      <span>{d.title}</span>
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-500 font-bold mt-2">
+                      <div>Số hiệu: <span className="text-slate-700">{d.issue_number || "Chưa có số"}</span></div>
+                      {d.is_pinned && (
+                        <div>• Cập nhật: <span className="text-slate-700">{formatDate(d.updatedAt || d.created_at)}</span></div>
+                      )}
+                    </div>
+                    
+                    <div className="text-[11px] text-slate-650 font-semibold mt-1">
+                      Cơ quan ban hành: <span className="font-bold text-slate-700">{d.issuing_authority || "---"}</span>
+                    </div>
+                    
+                    {d.summary && (
+                      <div className="text-[11px] text-slate-500 bg-slate-50 rounded-lg p-2.5 mt-2 border border-slate-100 line-clamp-2 leading-relaxed">
+                        {d.summary}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center gap-2 pt-2 border-t border-slate-100 z-10 relative">
+                    <button
+                      onClick={() => setActiveDoc(d)}
+                      className="flex-1 bg-blue-50 text-blue-600 border border-blue-100 py-2.5 rounded-xl text-xs font-bold cursor-pointer hover:bg-blue-100 active:scale-95 transition-all text-center"
+                    >
+                      Xem
+                    </button>
+                    <button
+                      onClick={() => updateDocument(d.id, { is_pinned: !d.is_pinned })}
+                      className={`flex-1 py-2.5 rounded-xl text-xs font-bold cursor-pointer transition-all border flex items-center justify-center gap-1 active:scale-95
+                        ${
+                          d.is_pinned
+                            ? "bg-amber-600 text-white border-amber-600 hover:bg-amber-700 shadow-sm shadow-amber-600/10"
+                            : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                        }`}
+                    >
+                      <span>📌</span>
+                      <span>{d.is_pinned ? "Bỏ ghim" : "Ghim"}</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (window.confirm("Xóa văn bản này?"))
+                          deleteDocument(d.id);
+                      }}
+                      className="flex-1 bg-red-50 text-red-600 border border-red-100 py-2.5 rounded-xl text-xs font-bold cursor-pointer hover:bg-red-100 active:scale-95 transition-all text-center"
+                    >
+                      Xóa
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {filteredDocs.length === 0 && (
+                <div className="text-center p-8 bg-white rounded-2xl text-slate-400 font-bold text-xs border border-slate-100">
+                  Không tìm thấy văn bản phù hợp.
+                </div>
+              )}
+            </div>
+
+            {/* Desktop View: Table */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left text-sm text-slate-600 border-collapse">
                 <thead className="bg-slate-50 text-slate-500 text-[11px] uppercase tracking-wider">
                   <tr>
@@ -520,7 +655,7 @@ export default function AdminPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white">
-                  {documents.map((d) => (
+                  {filteredDocs.map((d) => (
                     <tr
                       key={d.id}
                       className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors"
@@ -589,6 +724,16 @@ export default function AdminPage() {
                       </td>
                     </tr>
                   ))}
+                  {filteredDocs.length === 0 && (
+                    <tr>
+                      <td
+                        colSpan={5}
+                        className="p-8 text-center text-sm font-bold text-slate-400"
+                      >
+                        Không tìm thấy văn bản phù hợp.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>

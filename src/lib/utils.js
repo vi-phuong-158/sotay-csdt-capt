@@ -9,12 +9,14 @@ export function removeVietnameseDiacritics(str) {
 }
 
 export function fuzzyMatch(text, normalQuery, lowerQuery) {
-  if (!normalQuery) return true;
+  if (!lowerQuery) return true;
   if (!text) return false;
-  const lowerText = text.toLowerCase();
-  if (lowerText.includes(lowerQuery)) return true;
-  const normalText = removeVietnameseDiacritics(lowerText);
-  return normalText.includes(normalQuery);
+  
+  // Chuẩn hóa Unicode NFC để tránh lệch mã ký tự gõ tiếng Việt từ các hệ điều hành khác nhau
+  const normalizedText = text.normalize("NFC").toLowerCase();
+  const normalizedQuery = lowerQuery.normalize("NFC").toLowerCase();
+  
+  return normalizedText.includes(normalizedQuery);
 }
 
 export function formatDateTime(iso) {
