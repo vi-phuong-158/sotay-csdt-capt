@@ -190,7 +190,7 @@ export default function AdminPage() {
   const CATEGORIES = [
     { value: "hinh-su", label: "Hình sự" },
     { value: "to-tung-hinh-su", label: "Tố tụng Hình sự" },
-    { value: "huong-dan-dieu-tra", label: "Hướng dẫn điều tra" },
+    { value: "huong-dan-dieu-tra", label: "Hướng dẫn - Công an Phú Thọ" },
     { value: "khac", label: "Khác" },
   ];
 
@@ -671,22 +671,22 @@ export default function AdminPage() {
 
             {/* Desktop View: Table */}
             <div className="hidden md:block overflow-x-auto">
-              <table className="w-full text-left text-sm text-slate-600 border-collapse">
+              <table className="w-full text-left text-sm text-slate-600 border-collapse table-fixed">
                 <thead className="bg-slate-50 text-slate-500 text-[11px] uppercase tracking-wider">
                   <tr>
-                    <th className="p-4 border-b border-slate-100 font-bold">
+                    <th className="p-4 border-b border-slate-100 font-bold w-[40%]">
                       Văn bản / Số hiệu
                     </th>
-                    <th className="p-4 border-b border-slate-100 font-bold">
+                    <th className="p-4 border-b border-slate-100 font-bold w-[20%]">
                       Cơ quan / Ngày
                     </th>
-                    <th className="p-4 border-b border-slate-100 font-bold">
+                    <th className="p-4 border-b border-slate-100 font-bold w-[15%]">
                       Chuyên mục
                     </th>
-                    <th className="p-4 border-b border-slate-100 font-bold">
+                    <th className="p-4 border-b border-slate-100 font-bold w-[12%]">
                       Cập nhật
                     </th>
-                    <th className="p-4 border-b border-slate-100 font-bold text-right">
+                    <th className="p-4 border-b border-slate-100 font-bold text-right w-[13%]">
                       Thao tác
                     </th>
                   </tr>
@@ -697,21 +697,23 @@ export default function AdminPage() {
                       key={d.id}
                       className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors"
                     >
-                      <td className="p-4">
-                        <div className="text-slate-900 font-bold text-[13px] line-clamp-1 flex items-center gap-1.5">
+                      <td className="p-4 align-middle">
+                        <div className="text-slate-900 font-bold text-[13px] flex items-center gap-1.5 min-w-0">
                           {d.is_pinned && (
                             <span className="text-amber-500 cursor-help flex-shrink-0" title="Văn bản được ghim">
                               📌
                             </span>
                           )}
-                          <span className="truncate">{d.title}</span>
+                          <span className="truncate block" title={d.title}>
+                            {d.title}
+                          </span>
                         </div>
-                        <div className="text-[11px] text-slate-500 font-bold">
+                        <div className="text-[11px] text-slate-500 font-bold truncate" title={d.issue_number}>
                           {d.issue_number || "Chưa có số"}
                         </div>
                       </td>
-                      <td className="p-4">
-                        <div className="text-slate-800 font-bold text-[12px]">
+                      <td className="p-4 align-middle">
+                        <div className="text-slate-800 font-bold text-[12px] truncate" title={d.issuing_authority || "---"}>
                           {d.issuing_authority || "---"}
                         </div>
                         <div className="text-[11px] text-slate-500">
@@ -720,31 +722,32 @@ export default function AdminPage() {
                             : "---"}
                         </div>
                       </td>
-                      <td className="p-4">
-                        <span className="bg-forest/10 text-forest px-2 py-1 rounded text-[10px] font-bold">
+                      <td className="p-4 align-middle">
+                        <span className="bg-forest/10 text-forest px-2 py-1 rounded text-[10px] font-bold inline-block truncate max-w-full" title={d.categoryLabel}>
                           {d.categoryLabel}
                         </span>
                       </td>
-                      <td className="p-4 text-[12px] text-slate-500">
+                      <td className="p-4 text-[12px] text-slate-500 align-middle">
                         {formatDate(d.updatedAt || d.created_at)}
                       </td>
-                      <td className="p-4 text-right">
-                        <div className="flex justify-end gap-2">
+                      <td className="p-4 text-right align-middle">
+                        <div className="flex justify-end gap-1.5">
                           <button
                             onClick={() => setActiveDoc(d)}
-                            className="bg-blue-50 text-blue-600 border border-blue-100 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer hover:bg-blue-100 transition-colors"
+                            className="bg-blue-50 text-blue-600 border border-blue-100 px-2.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer hover:bg-blue-100 transition-colors"
+                            title="Xem chi tiết"
                           >
                             Xem
                           </button>
                           <button
                             onClick={() => updateDocument(d.id, { is_pinned: !d.is_pinned })}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all border flex items-center gap-1
+                            className={`px-2.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all border flex items-center gap-0.5
                               ${
                                 d.is_pinned
                                   ? "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100"
                                   : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
                               }`}
-                            title={d.is_pinned ? "Hủy ghim văn bản này khỏi trang chủ" : "Ghim văn bản này lên đầu trang chủ"}
+                            title={d.is_pinned ? "Hủy ghim văn bản" : "Ghim văn bản"}
                           >
                             {d.is_pinned ? "Bỏ ghim" : "Ghim"}
                           </button>
@@ -753,7 +756,8 @@ export default function AdminPage() {
                               if (window.confirm("Xóa văn bản này?"))
                                 deleteDocument(d.id);
                             }}
-                            className="bg-red-50 text-red-600 border border-red-100 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer hover:bg-red-100 transition-colors"
+                            className="bg-red-50 text-red-600 border border-red-100 px-2.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer hover:bg-red-100 transition-colors"
+                            title="Xóa văn bản"
                           >
                             Xóa
                           </button>

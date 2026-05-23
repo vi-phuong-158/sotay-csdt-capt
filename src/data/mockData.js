@@ -235,7 +235,7 @@ export const MOCK_DOCUMENTS = [
     title: "Thông tư 28/2020/TT-BCA - Quy trình thu thập, bảo quản vật chứng",
     issue_number: "TT 28/2020/TT-BCA",
     category: "huong-dan-dieu-tra",
-    categoryLabel: "Hướng dẫn điều tra",
+    categoryLabel: "Hướng dẫn - Công an Phú Thọ",
     summary:
       "Hướng dẫn chi tiết quy trình tiếp nhận, thu thập, bảo quản, vận chuyển và xử lý vật chứng trong điều tra vụ án hình sự theo quy định hiện hành.",
     updatedAt: "2026-03-01",
@@ -330,7 +330,7 @@ export const MOCK_DOCUMENTS = [
     title: "Quy trình Hỏi cung bị can theo BLTTHS 2015",
     issue_number: "HD 15/2022/BCA",
     category: "huong-dan-dieu-tra",
-    categoryLabel: "Hướng dẫn điều tra",
+    categoryLabel: "Hướng dẫn - Công an Phú Thọ",
     summary:
       "Hướng dẫn kỹ thuật hỏi cung bị can, lấy lời khai người làm chứng đúng quy định pháp luật, đảm bảo tính hợp pháp và hiệu quả của hoạt động tố tụng.",
     updatedAt: "2026-03-15",

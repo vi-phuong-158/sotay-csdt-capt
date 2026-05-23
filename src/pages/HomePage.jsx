@@ -27,7 +27,7 @@ export default function HomePage({ setActiveNav }) {
     { value: "all", label: "Tất cả chuyên mục" },
     { value: "hinh-su", label: "Hình sự" },
     { value: "to-tung-hinh-su", label: "Tố tụng Hình sự" },
-    { value: "huong-dan-dieu-tra", label: "Hướng dẫn điều tra" },
+    { value: "huong-dan-dieu-tra", label: "Hướng dẫn - Công an Phú Thọ" },
     { value: "khac", label: "Khác" },
   ];
 

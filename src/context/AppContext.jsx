@@ -47,14 +47,25 @@ export function AppProvider({ children }) {
           fetchSheet("activity_logs"),
         ]);
 
-        const normalizedDocs = (fetchedDocs || []).map((d) => ({
-          ...d,
-          is_pinned:
+        const normalizedDocs = (fetchedDocs || []).map((d) => {
+          const isPinned =
             d.is_pinned === true ||
             String(d.is_pinned).toLowerCase() === "true" ||
             d.is_pinned === 1 ||
-            String(d.is_pinned) === "1",
-        }));
+            String(d.is_pinned) === "1";
+
+          const label =
+            d.category === "huong-dan-dieu-tra" ||
+            d.categoryLabel === "Hướng dẫn điều tra"
+              ? "Hướng dẫn - Công an Phú Thọ"
+              : d.categoryLabel;
+
+          return {
+            ...d,
+            is_pinned: isPinned,
+            categoryLabel: label,
+          };
+        });
 
         setDocuments(normalizedDocs);
         setLogs(fetchedLogs);
