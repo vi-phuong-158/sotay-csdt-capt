@@ -674,19 +674,19 @@ export default function AdminPage() {
               <table className="w-full text-left text-sm text-slate-600 border-collapse table-fixed">
                 <thead className="bg-slate-50 text-slate-500 text-[11px] uppercase tracking-wider">
                   <tr>
-                    <th className="p-4 border-b border-slate-100 font-bold w-[40%]">
+                    <th className="p-4 border-b border-slate-100 font-bold w-[35%]">
                       Văn bản / Số hiệu
                     </th>
-                    <th className="p-4 border-b border-slate-100 font-bold w-[20%]">
+                    <th className="p-4 border-b border-slate-100 font-bold w-[18%]">
                       Cơ quan / Ngày
                     </th>
                     <th className="p-4 border-b border-slate-100 font-bold w-[15%]">
                       Chuyên mục
                     </th>
-                    <th className="p-4 border-b border-slate-100 font-bold w-[12%]">
+                    <th className="p-4 border-b border-slate-100 font-bold w-[15%]">
                       Cập nhật
                     </th>
-                    <th className="p-4 border-b border-slate-100 font-bold text-right w-[13%]">
+                    <th className="p-4 border-b border-slate-100 font-bold text-right w-[17%]">
                       Thao tác
                     </th>
                   </tr>
